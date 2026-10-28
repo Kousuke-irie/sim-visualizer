@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from app.parsers.plt_parser import PltParseError, parse_plt_text
@@ -88,3 +89,10 @@ def test_point_count_mismatch_reports_counts():
 def test_missing_data_rows():
     with pytest.raises(PltParseError, match="データ行が見つかりません"):
         parse_plt_text(HEADER)
+
+
+def test_rows_starting_with_nan_are_data_not_header():
+    # 計算が発散すると Fortran は NaN を書き出す。英字で始まってもヘッダ扱いしないこと
+    parsed = parse_plt_text(HEADER + "NaN 0 0 1\n1 0 0 Infinity\n")
+    assert np.isnan(parsed.grid[0, 0, 0, 0])
+    assert np.isinf(parsed.grid[0, 0, 1, 3])
