@@ -3,39 +3,11 @@ import FileUpload from '../common/FileUpload'
 import ErrorBanner from '../common/ErrorBanner'
 import SectionPlot from './SectionPlot'
 import SectionControls from './SectionControls'
-import { uploadPlt } from '../../api/client'
+import { fetchSectionData, uploadPlt } from '../../api/client'
 import { useDebounced } from '../../hooks/useDebounced'
-import { useSectionData } from '../../hooks/useRender'
-import type { Dims, PltMeta, Plane, SectionDataRequest, SectionParams } from '../../types'
-
-const PLANE_AXIS: Record<Plane, keyof Dims> = { YZ: 'I', XZ: 'J', XY: 'K' }
-const COORD_VAR_LABEL: Record<keyof Dims, string> = { I: 'X', J: 'Y', K: 'Z' }
-
-function defaultVariable(variables: string[]): string {
-  return variables.find((v) => !['X', 'Y', 'Z'].includes(v)) ?? variables[0]
-}
-
-function midIndex(size: number): number {
-  return Math.max(0, Math.floor((size - 1) / 2))
-}
-
-function defaultParams(meta: PltMeta, plane: Plane): SectionParams {
-  const size = meta.dims[PLANE_AXIS[plane]]
-  return {
-    plane,
-    sliceIndex: midIndex(size),
-    variable: defaultVariable(meta.variables),
-    colormap: 'viridis',
-    customColormap: { enabled: false, low: '#1b4965', useMid: false, mid: '#2a9d8f', high: '#e76f51' },
-    fillLevels: 30,
-    lineLevels: 10,
-    showContourLines: true,
-    colorRange: { auto: true },
-    vectors: { show: true, skip: 2, width: 1.5, headWidth: 8 },
-    axis: { zlim: { auto: true }, aspect: { auto: true, ratio: 1 } },
-    exportScale: 2,
-  }
-}
+import { useLatestRequest } from '../../hooks/useLatestRequest'
+import type { PltMeta, Plane, SectionDataRequest, SectionParams } from '../../types'
+import { COORD_VAR_LABEL, PLANE_AXIS, createDefaultSectionParams, midIndex, sliceAxisSize } from './sectionDefaults'
 
 export default function SectionView() {
   const [meta, setMeta] = useState<PltMeta | null>(null)
@@ -49,7 +21,7 @@ export default function SectionView() {
     try {
       const newMeta = await uploadPlt(file)
       setMeta(newMeta)
-      setParams(defaultParams(newMeta, 'YZ'))
+      setParams(createDefaultSectionParams(newMeta.dims, newMeta.variables, 'YZ'))
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'アップロードに失敗しました')
     } finally {
@@ -63,8 +35,7 @@ export default function SectionView() {
 
   function handlePlaneChange(plane: Plane) {
     if (!meta) return
-    const size = meta.dims[PLANE_AXIS[plane]]
-    updateParams({ plane, sliceIndex: midIndex(size) })
+    updateParams({ plane, sliceIndex: midIndex(sliceAxisSize(meta.dims, plane)) })
   }
 
   // データ取得（サーバー往復）が必要なのは平面・スライス位置・変数が変わったときだけ。
@@ -81,9 +52,9 @@ export default function SectionView() {
   }, [fileId, plane, sliceIndex, variable])
 
   const debouncedRequest = useDebounced(dataRequest, 150)
-  const { data, loading, error: dataError } = useSectionData(debouncedRequest)
+  const { data, loading, error: dataError } = useLatestRequest(debouncedRequest, fetchSectionData)
 
-  const axisSize = meta && params ? meta.dims[PLANE_AXIS[params.plane]] : 0
+  const axisSize = meta && params ? sliceAxisSize(meta.dims, params.plane) : 0
   const datasetKey = meta && params ? `${meta.file_id}-${params.plane}-${params.sliceIndex}-${params.variable}` : ''
 
   return (

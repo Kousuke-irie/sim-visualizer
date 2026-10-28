@@ -11,6 +11,7 @@ export type Coords = Schemas['Coords']
 export type PltMeta = Schemas['PltMeta']
 export type DatGrid = Schemas['DatGrid']
 export type DatMeta = Schemas['DatMeta']
+export type UploadedMeta = PltMeta | DatMeta
 
 // サーバーから取得する生の断面データ（描画自体はフロントで行う）
 export type SectionDataRequest = Schemas['SectionDataRequest']

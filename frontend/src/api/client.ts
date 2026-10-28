@@ -11,6 +11,7 @@ import type {
   SectionDataRequest,
   SectionDataResponse,
   TimeseriesDataResponse,
+  UploadedMeta,
 } from '../types'
 
 const BASE = '/api'
@@ -42,99 +43,76 @@ async function safeErrorMessage(res: Response, fallback: string): Promise<string
   }
 }
 
-export async function uploadPlt(file: File): Promise<PltMeta> {
-  const form = new FormData()
-  form.append('file', file)
-  const res = await fetch(`${BASE}/upload`, { method: 'POST', body: form })
+const FETCH_FAILED = 'データ取得に失敗しました'
+
+// 全 API 呼び出しの共通処理。失敗時はサーバーの detail（なければ「既定文 (ステータス)」）を Error にする
+async function request<T>(path: string, init: RequestInit | undefined, failure: string): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, init)
   if (!res.ok) {
-    throw new Error(await safeErrorMessage(res, `アップロードに失敗しました (${res.status})`))
+    throw new Error(await safeErrorMessage(res, `${failure} (${res.status})`))
   }
   return res.json()
 }
 
-export async function fetchSectionData(req: SectionDataRequest): Promise<SectionDataResponse> {
-  const res = await fetch(`${BASE}/section/data`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(req),
-  })
-  if (!res.ok) {
-    throw new Error(await safeErrorMessage(res, `データ取得に失敗しました (${res.status})`))
+function postJson<T>(path: string, body: unknown, failure = FETCH_FAILED): Promise<T> {
+  return request<T>(
+    path,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) },
+    failure,
+  )
+}
+
+function getJson<T>(path: string, failure = FETCH_FAILED): Promise<T> {
+  return request<T>(path, undefined, failure)
+}
+
+// /api/upload は拡張子で .plt / .dat を判定し、kind で区別できるメタ情報を返す
+async function uploadFile(file: File): Promise<UploadedMeta> {
+  const form = new FormData()
+  form.append('file', file)
+  return request<UploadedMeta>('/upload', { method: 'POST', body: form }, 'アップロードに失敗しました')
+}
+
+function expectKind<K extends UploadedMeta['kind']>(meta: UploadedMeta, kind: K): Extract<UploadedMeta, { kind: K }> {
+  if (meta.kind !== kind) {
+    throw new Error(`想定と異なる種類のファイルです（期待: .${kind}、実際: .${meta.kind}）`)
   }
-  return res.json()
+  return meta as Extract<UploadedMeta, { kind: K }>
+}
+
+export async function uploadPlt(file: File): Promise<PltMeta> {
+  return expectKind(await uploadFile(file), 'plt')
 }
 
 export async function uploadDat(file: File): Promise<DatMeta> {
-  const form = new FormData()
-  form.append('file', file)
-  const res = await fetch(`${BASE}/upload`, { method: 'POST', body: form })
-  if (!res.ok) {
-    throw new Error(await safeErrorMessage(res, `アップロードに失敗しました (${res.status})`))
-  }
-  return res.json()
+  return expectKind(await uploadFile(file), 'dat')
 }
 
-export async function fetchTimeseriesData(fileId: string): Promise<TimeseriesDataResponse> {
-  const res = await fetch(`${BASE}/timeseries/data/${fileId}`)
-  if (!res.ok) {
-    throw new Error(await safeErrorMessage(res, `データ取得に失敗しました (${res.status})`))
-  }
-  return res.json()
+export function fetchSectionData(req: SectionDataRequest): Promise<SectionDataResponse> {
+  return postJson('/section/data', req)
 }
 
-export async function browseDirectory(path?: string): Promise<DirectoryBrowseResponse> {
-  const url = path ? `${BASE}/directory/browse?path=${encodeURIComponent(path)}` : `${BASE}/directory/browse`
-  const res = await fetch(url)
-  if (!res.ok) {
-    throw new Error(await safeErrorMessage(res, `ディレクトリ一覧の取得に失敗しました (${res.status})`))
-  }
-  return res.json()
+export function fetchTimeseriesData(fileId: string): Promise<TimeseriesDataResponse> {
+  return getJson(`/timeseries/data/${encodeURIComponent(fileId)}`)
 }
 
-export async function openDirectory(path: string): Promise<DirectoryMeta> {
-  const res = await fetch(`${BASE}/directory/open`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ path } satisfies DirectoryOpenRequest),
-  })
-  if (!res.ok) {
-    throw new Error(await safeErrorMessage(res, `ディレクトリを開けませんでした (${res.status})`))
-  }
-  return res.json()
+export function browseDirectory(path?: string): Promise<DirectoryBrowseResponse> {
+  const query = path ? `?path=${encodeURIComponent(path)}` : ''
+  return getJson(`/directory/browse${query}`, 'ディレクトリ一覧の取得に失敗しました')
 }
 
-export async function fetchDirectoryMeta(dirId: string): Promise<DirectoryMeta> {
-  const res = await fetch(`${BASE}/directory/${dirId}/meta`)
-  if (!res.ok) {
-    throw new Error(await safeErrorMessage(res, `データ取得に失敗しました (${res.status})`))
-  }
-  return res.json()
+export function openDirectory(path: string): Promise<DirectoryMeta> {
+  return postJson('/directory/open', { path } satisfies DirectoryOpenRequest, 'ディレクトリを開けませんでした')
 }
 
-export async function fetchDirectorySectionData(
-  req: DirectorySectionDataRequest,
-): Promise<DirectorySectionDataResponse> {
-  const res = await fetch(`${BASE}/directory/section/data`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(req),
-  })
-  if (!res.ok) {
-    throw new Error(await safeErrorMessage(res, `データ取得に失敗しました (${res.status})`))
-  }
-  return res.json()
+export function fetchDirectoryMeta(dirId: string): Promise<DirectoryMeta> {
+  return getJson(`/directory/${encodeURIComponent(dirId)}/meta`)
 }
 
-export async function fetchDirectoryTimeseriesData(
-  req: DirectoryTimeseriesRequest,
-): Promise<DirectoryTimeseriesResponse> {
-  const res = await fetch(`${BASE}/directory/timeseries/data`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(req),
-  })
-  if (!res.ok) {
-    throw new Error(await safeErrorMessage(res, `データ取得に失敗しました (${res.status})`))
-  }
-  return res.json()
+export function fetchDirectorySectionData(req: DirectorySectionDataRequest): Promise<DirectorySectionDataResponse> {
+  return postJson('/directory/section/data', req)
+}
+
+export function fetchDirectoryTimeseriesData(req: DirectoryTimeseriesRequest): Promise<DirectoryTimeseriesResponse> {
+  return postJson('/directory/timeseries/data', req)
 }
