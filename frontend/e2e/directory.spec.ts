@@ -38,6 +38,18 @@ test.describe('ディレクトリモード', () => {
     expect(response.request().postDataJSON()).toMatchObject({ param: 'TEMP' })
   })
 
+  test('時系列の地点を切り替えても、ユーザーが入力したタイトルは保持される', async ({ page }) => {
+    await page.getByText('時系列', { exact: true }).click()
+    const title = page.getByRole('textbox', { name: 'タイトル' })
+    await title.fill('湾奥の溶存酸素')
+
+    const responsePromise = page.waitForResponse('**/api/directory/timeseries/data')
+    await page.locator('.point-param-select select').nth(1).selectOption('02')
+    await responsePromise
+
+    await expect(title).toHaveValue('湾奥の溶存酸素')
+  })
+
   test('input.dat の無いディレクトリはエラーを表示する', async ({ page }) => {
     await page.getByPlaceholder('例: /data/mecamamo').fill('/')
     await page.getByRole('button', { name: 'ディレクトリを開く' }).click()
