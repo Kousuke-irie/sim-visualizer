@@ -1,5 +1,3 @@
-import os
-
 from app.parsers.dir_scanner import scan_hist_files, scan_plt_frames
 
 

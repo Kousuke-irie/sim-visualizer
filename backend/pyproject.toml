@@ -1,0 +1,13 @@
+[tool.pytest.ini_options]
+testpaths = ["app/tests"]
+filterwarnings = ["ignore::DeprecationWarning:starlette.*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B"]
+# FastAPI の Depends/Query 等をデフォルト引数に書く慣習と衝突するため
+ignore = ["B008"]

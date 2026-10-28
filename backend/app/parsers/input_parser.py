@@ -143,9 +143,7 @@ def parse_input_dat(text: str) -> ParsedInput:
     if nhist != 0:
         ij_tokens = cur.take_tokens()  # 22: ijhist0 (flat, 3*nhist)
         if len(ij_tokens) < nhist * 3:
-            raise InputParseError(
-                f"ijhist0 のトークン数が不足しています（期待={nhist * 3}、実際={len(ij_tokens)}）"
-            )
+            raise InputParseError(f"ijhist0 のトークン数が不足しています（期待={nhist * 3}、実際={len(ij_tokens)}）")
         try:
             values = [int(float(v)) for v in ij_tokens[: nhist * 3]]
         except ValueError as e:

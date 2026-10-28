@@ -65,9 +65,7 @@ def parse_dat_text(text: str) -> ParsedDat:
     expected_cols = len(depths) + 1
     bad_rows = [i for i, row in enumerate(rows) if len(row) != expected_cols]
     if bad_rows:
-        raise DatParseError(
-            f"データ行の列数が深度数と一致しません（期待={expected_cols}列）。不正な行: {bad_rows[:5]}"
-        )
+        raise DatParseError(f"データ行の列数が深度数と一致しません（期待={expected_cols}列）。不正な行: {bad_rows[:5]}")
 
     data = np.array(rows, dtype=np.float64)
     times = data[:, 0]

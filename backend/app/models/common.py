@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class Dims(BaseModel):
-    I: int
+    I: int  # noqa: E741  Tecplot の格子軸名に合わせる
     J: int
     K: int
 

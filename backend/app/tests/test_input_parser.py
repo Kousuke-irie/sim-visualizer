@@ -39,7 +39,11 @@ BASE_LINES = [
 ]
 
 
-def build_input(dims="10 10 5 1 #in,jn,kn,nest", fifit2="3600.  0.   999999999999. #fifit2,5,6", milb_mjlb="0 0 #miflib"):
+def build_input(
+    dims="10 10 5 1 #in,jn,kn,nest",
+    fifit2="3600.  0.   999999999999. #fifit2,5,6",
+    milb_mjlb="0 0 #miflib",
+):
     return "\n".join(BASE_LINES).format(dims=dims, fifit2=fifit2, milb_mjlb=milb_mjlb) + "\n"
 
 

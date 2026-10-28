@@ -3,6 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 
+from app.models.common import DatGrid
 from app.models.directory import (
     DirectoryBrowseEntry,
     DirectoryBrowseResponse,
@@ -13,7 +14,6 @@ from app.models.directory import (
     DirectoryTimeseriesRequest,
     DirectoryTimeseriesResponse,
 )
-from app.models.common import DatGrid
 from app.parsers.dat_parser import DatParseError, parse_dat_bytes
 from app.parsers.dir_scanner import contains_input_dat, scan_hist_files, scan_plt_frames
 from app.parsers.input_parser import InputParseError, parse_input_dat
@@ -40,7 +40,7 @@ async def browse_directory(path: Optional[str] = None) -> DirectoryBrowseRespons
     try:
         names = sorted(os.listdir(target), key=str.lower)
     except PermissionError:
-        raise HTTPException(status_code=403, detail="このディレクトリへのアクセス権がありません")
+        raise HTTPException(status_code=403, detail="このディレクトリへのアクセス権がありません") from None
 
     entries = []
     for name in names:
@@ -103,7 +103,7 @@ async def get_directory_meta(dir_id: str) -> DirectoryMeta:
     try:
         return directory_store.get_meta(dir_id)
     except KeyError:
-        raise HTTPException(status_code=404, detail="指定されたdir_idが見つかりません")
+        raise HTTPException(status_code=404, detail="指定されたdir_idが見つかりません") from None
 
 
 @router.post("/section/data", response_model=DirectorySectionDataResponse)
@@ -111,11 +111,13 @@ async def get_directory_section_data(req: DirectorySectionDataRequest) -> Direct
     try:
         entry = directory_store.get(req.dir_id)
     except KeyError:
-        raise HTTPException(status_code=404, detail="指定されたdir_idが見つかりません")
+        raise HTTPException(status_code=404, detail="指定されたdir_idが見つかりません") from None
 
     frame_meta = next((f for f in entry.plt_frames if f.index == req.frame_index), None)
     if frame_meta is None:
-        raise HTTPException(status_code=400, detail=f"指定されたframe_indexのフレームが見つかりません: {req.frame_index}")
+        raise HTTPException(
+            status_code=400, detail=f"指定されたframe_indexのフレームが見つかりません: {req.frame_index}"
+        )
 
     frame_path = os.path.join(entry.field2_dir, frame_meta.file)
     try:
@@ -141,7 +143,7 @@ async def get_directory_timeseries_data(req: DirectoryTimeseriesRequest) -> Dire
     try:
         entry = directory_store.get(req.dir_id)
     except KeyError:
-        raise HTTPException(status_code=404, detail="指定されたdir_idが見つかりません")
+        raise HTTPException(status_code=404, detail="指定されたdir_idが見つかりません") from None
 
     points = entry.ts_index.by_param.get(req.param)
     if points is None or req.point not in points:

@@ -12,7 +12,7 @@ async def get_section_data(req: SectionDataRequest) -> SectionDataResponse:
     try:
         entry = store.get_entry(req.file_id)
     except KeyError:
-        raise HTTPException(status_code=404, detail="指定されたfile_idが見つかりません")
+        raise HTTPException(status_code=404, detail="指定されたfile_idが見つかりません") from None
 
     try:
         return extract_section_data(entry, req)

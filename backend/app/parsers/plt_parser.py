@@ -39,7 +39,7 @@ def parse_plt_text(text: str) -> ParsedPlt:
             continue
 
         if upper.startswith("VARIABLES"):
-            after_eq = line.split("=", 1)[1] if "=" in line else line[len("VARIABLES"):]
+            after_eq = line.split("=", 1)[1] if "=" in line else line[len("VARIABLES") :]
             variables = re.findall(r"[A-Za-z_][A-Za-z0-9_]*", after_eq)
             continue
 
@@ -75,13 +75,9 @@ def parse_plt_text(text: str) -> ParsedPlt:
 
     expected_points = dims["I"] * dims["J"] * dims["K"]
     if data.shape[0] != expected_points:
-        raise PltParseError(
-            f"データ点数が格子寸法と一致しません: 期待={expected_points} 実際={data.shape[0]}"
-        )
+        raise PltParseError(f"データ点数が格子寸法と一致しません: 期待={expected_points} 実際={data.shape[0]}")
     if data.shape[1] != nvar:
-        raise PltParseError(
-            f"列数が変数数と一致しません: 変数数={nvar} 列数={data.shape[1]}"
-        )
+        raise PltParseError(f"列数が変数数と一致しません: 変数数={nvar} 列数={data.shape[1]}")
 
     grid = data.reshape(dims["K"], dims["J"], dims["I"], nvar)
     return ParsedPlt(variables=variables, dims=dims, grid=grid)

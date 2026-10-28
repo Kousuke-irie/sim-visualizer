@@ -41,7 +41,7 @@ async def get_meta(file_id: str) -> Union[PltMeta, DatMeta]:
     try:
         return store.get_meta(file_id)
     except KeyError:
-        raise HTTPException(status_code=404, detail="指定されたfile_idが見つかりません")
+        raise HTTPException(status_code=404, detail="指定されたfile_idが見つかりません") from None
 
 
 @router.delete("/file/{file_id}")

@@ -37,10 +37,7 @@ def _mask_missing(arr: np.ndarray) -> np.ma.MaskedArray:
 def _to_nested_list(masked: np.ma.MaskedArray) -> List[List[Optional[float]]]:
     mask = np.ma.getmaskarray(masked)
     data = masked.data
-    return [
-        [None if mask[i, j] else float(data[i, j]) for j in range(data.shape[1])]
-        for i in range(data.shape[0])
-    ]
+    return [[None if mask[i, j] else float(data[i, j]) for j in range(data.shape[1])] for i in range(data.shape[0])]
 
 
 def extract_section_data(entry: PltEntry, req: SectionDataRequest) -> SectionDataResponse:
