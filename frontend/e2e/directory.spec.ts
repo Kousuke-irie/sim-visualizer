@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test'
+import { writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { createSimulationDir } from './fixtures'
 
 test.describe('ディレクトリモード', () => {
@@ -38,9 +40,36 @@ test.describe('ディレクトリモード', () => {
     expect(response.request().postDataJSON()).toMatchObject({ param: 'TEMP' })
   })
 
+  test('時系列の地点を切り替えても、ユーザーが入力したタイトルは保持される', async ({ page }) => {
+    await page.getByText('時系列', { exact: true }).click()
+    const title = page.getByRole('textbox', { name: 'タイトル' })
+    await title.fill('湾奥の溶存酸素')
+
+    const responsePromise = page.waitForResponse('**/api/directory/timeseries/data')
+    await page.locator('.point-param-select select').nth(1).selectOption('02')
+    await responsePromise
+
+    await expect(title).toHaveValue('湾奥の溶存酸素')
+  })
+
   test('input.dat の無いディレクトリはエラーを表示する', async ({ page }) => {
     await page.getByPlaceholder('例: /data/mecamamo').fill('/')
     await page.getByRole('button', { name: 'ディレクトリを開く' }).click()
     await expect(page.getByText(/input.dat が見つかりません/)).toBeVisible()
+  })
+
+  test('時系列の初回取得に失敗してもエラーを表示し、別のパラメータに切り替えられる', async ({ page }) => {
+    const brokenDir = createSimulationDir()
+    // 時系列タブが最初に開く DOX-01 を壊す
+    writeFileSync(join(brokenDir, 'hist', 'DOX-01.dat'), 'broken\n')
+    await page.getByPlaceholder('例: /data/mecamamo').fill(brokenDir)
+    await page.getByRole('button', { name: 'ディレクトリを開く' }).click()
+    await expect(page.getByText(brokenDir)).toBeVisible()
+
+    await page.getByText('時系列', { exact: true }).click()
+    await expect(page.locator('.error-banner')).toBeVisible()
+
+    await page.locator('.point-param-select select').first().selectOption('TEMP')
+    await expect(page.locator('.js-plotly-plot')).toBeVisible()
   })
 })

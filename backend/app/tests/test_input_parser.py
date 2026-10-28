@@ -87,3 +87,21 @@ def test_parse_input_dat_milb_nonzero_skips_extra_line():
 def test_parse_input_dat_truncated_file_raises():
     with pytest.raises(InputParseError):
         parse_input_dat("1 5 0 1 1 0\n10 10 5 1\n")
+
+
+@pytest.mark.parametrize(
+    ("original", "broken"),
+    [
+        ("0.8                     #dt", "abc #dt"),
+        ("7200.  1  0             #endtime,ntime,irst", "end 1 0 #endtime"),
+        ("3600.  0.   999999999999. #fifit2,5,6", "x 0. 1. #fifit2"),
+        ("10.0                    #dx", "ten #dx"),
+        ("2  300.0                #nhist,histout", "2 every5min #nhist,histout"),
+    ],
+)
+def test_parse_input_dat_non_numeric_value_raises_parse_error(original, broken):
+    # 数値変換の失敗が素の ValueError で漏れると API が 500 になるため、InputParseError に揃える
+    text = build_input()
+    assert original in text
+    with pytest.raises(InputParseError, match="数値変換"):
+        parse_input_dat(text.replace(original, broken))

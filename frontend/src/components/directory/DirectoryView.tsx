@@ -7,6 +7,7 @@ import SectionControls from '../section/SectionControls'
 import SectionPlot from '../section/SectionPlot'
 import TimeseriesControls from '../timeseries/TimeseriesControls'
 import TimeseriesPlot from '../timeseries/TimeseriesPlot'
+import { reconcileTimeseriesParams } from '../timeseries/timeseriesParams'
 import { fetchDirectoryTimeseriesData, openDirectory } from '../../api/client'
 import { useDebounced } from '../../hooks/useDebounced'
 import { useDirectorySectionData } from '../../hooks/useRender'
@@ -48,17 +49,6 @@ function defaultSectionParams(meta: DirectoryMeta, plane: Plane): SectionParams 
     colorRange: { auto: true },
     vectors: { show: true, skip: 2, width: 1.5, headWidth: 8 },
     axis: { zlim: { auto: true }, aspect: { auto: true, ratio: 1 } },
-    exportScale: 2,
-  }
-}
-
-function defaultTimeseriesParams(depths: string[]): TimeseriesParams {
-  return {
-    selectedDepths: [...depths],
-    timeUnit: 'sec',
-    timeRange: { auto: true },
-    valueRange: { auto: true },
-    axis: {},
     exportScale: 2,
   }
 }
@@ -152,7 +142,7 @@ export default function DirectoryView() {
       .then((res) => {
         if (cancelled) return
         setTsData(res)
-        setTsParams(defaultTimeseriesParams(res.depths))
+        setTsParams((prev) => reconcileTimeseriesParams(prev, res.depths))
       })
       .catch((err: Error) => {
         if (!cancelled) setTsError(err.message)
@@ -252,7 +242,9 @@ export default function DirectoryView() {
         </>
       )}
 
-      {meta && tsParams && subTab === 'timeseries' && (
+      {/* tsParams は最初の取得が成功するまで null。エラー表示と地点・パラメータの選択はそれを待たずに出し、
+          初回取得に失敗しても別の組み合わせを選び直せるようにする */}
+      {meta && subTab === 'timeseries' && (
         <>
           <ErrorBanner message={tsError} />
           <PointParamSelect
@@ -262,15 +254,17 @@ export default function DirectoryView() {
             point={tsPoint}
             onChange={handlePointParamChange}
           />
-          <div className="section-view__body">
-            <TimeseriesControls meta={tsMeta} params={tsParams} onChange={updateTsParams} />
-            <TimeseriesPlot
-              meta={tsMeta}
-              data={tsData ? { times: tsData.times, values: tsData.values } : null}
-              loading={tsLoading}
-              params={tsParams}
-            />
-          </div>
+          {tsParams && (
+            <div className="section-view__body">
+              <TimeseriesControls meta={tsMeta} params={tsParams} onChange={updateTsParams} />
+              <TimeseriesPlot
+                meta={tsMeta}
+                data={tsData ? { times: tsData.times, values: tsData.values } : null}
+                loading={tsLoading}
+                params={tsParams}
+              />
+            </div>
+          )}
         </>
       )}
     </div>
