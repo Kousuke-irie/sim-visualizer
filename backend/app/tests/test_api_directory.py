@@ -105,8 +105,8 @@ def test_open_with_unsupported_nest_is_400(client, sim_dir):
     assert "nest" in res.json()["detail"]
 
 
-def test_open_nonexistent_path_is_404(client):
-    res = client.post("/api/directory/open", json={"path": "/no/such/dir"})
+def test_open_nonexistent_path_is_404(client, tmp_path):
+    res = client.post("/api/directory/open", json={"path": str(tmp_path / "no-such-dir")})
     assert res.status_code == 404
 
 

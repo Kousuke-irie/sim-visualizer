@@ -19,23 +19,34 @@ from app.parsers.dir_scanner import contains_input_dat, scan_hist_files, scan_pl
 from app.parsers.input_parser import InputParseError, parse_input_dat
 from app.parsers.plt_parser import PltParseError, parse_plt_bytes
 from app.services.directory_store import directory_store
+from app.services.path_policy import (
+    PathNotAllowedError,
+    first_existing_data_root,
+    is_data_root,
+    resolve_within_data_roots,
+)
 from app.services.plt_cache import plt_cache
 from app.services.section_data import SectionDataError, extract_section_data
 from app.services.store import PltEntry
 
 router = APIRouter(prefix="/api/directory", tags=["directory"])
 
-# UIの「参照」機能のデフォルト起点。docker-compose では /data にマウントする想定（design 2節）。
-# 存在しなければホームディレクトリにフォールバックする（非Docker実行時にも参照UIが機能するように）。
-DEFAULT_BROWSE_ROOTS = ["/data", os.path.expanduser("~")]
+OUTSIDE_DATA_ROOT_DETAIL = "許可されたデータディレクトリの外にはアクセスできません"
 
 
 @router.get("/browse", response_model=DirectoryBrowseResponse)
 async def browse_directory(path: Optional[str] = None) -> DirectoryBrowseResponse:
-    target = path or next((r for r in DEFAULT_BROWSE_ROOTS if os.path.isdir(r)), "/")
+    # 起点はデータルート（docker compose では /data）。それより上や外はたどらせない
+    target = path or first_existing_data_root()
+    if target is None:
+        raise HTTPException(status_code=404, detail="データディレクトリが見つかりません")
+    target = os.path.abspath(target)
+    try:
+        resolve_within_data_roots(target)
+    except PathNotAllowedError:
+        raise HTTPException(status_code=403, detail=OUTSIDE_DATA_ROOT_DETAIL) from None
     if not os.path.isdir(target):
         raise HTTPException(status_code=404, detail="指定されたパスが見つかりません")
-    target = os.path.abspath(target)
 
     try:
         names = sorted(os.listdir(target), key=str.lower)
@@ -49,20 +60,43 @@ async def browse_directory(path: Optional[str] = None) -> DirectoryBrowseRespons
         full = os.path.join(target, name)
         if not os.path.isdir(full):
             continue
+        try:
+            # データルート外を指すシンボリックリンクは一覧に出さない
+            resolve_within_data_roots(full)
+        except PathNotAllowedError:
+            continue
         has_direct = os.path.isfile(os.path.join(full, "input.dat"))
         # input.dat を持たないディレクトリは、子孫にも無ければ一覧から除外する
         # （子孫のどこかに存在すればナビゲーション用に残す）。
         if has_direct or contains_input_dat(full):
             entries.append(DirectoryBrowseEntry(name=name, path=full, has_input_dat=has_direct))
 
-    parent = os.path.dirname(target) if os.path.dirname(target) != target else None
+    parent = None if is_data_root(target) else os.path.dirname(target)
 
     return DirectoryBrowseResponse(path=target, parent=parent, entries=entries)
+
+
+def _result_dir(root: str, name: str, label: str) -> str:
+    # input.dat の出力先は ../ や絶対パスもあり得る。データルート配下に収まる限りは許可する
+    path = os.path.join(root, name)
+    try:
+        resolve_within_data_roots(path)
+    except PathNotAllowedError:
+        raise HTTPException(
+            status_code=400, detail=f"{label}ディレクトリ（{name}）が許可されたデータディレクトリの外を指しています"
+        ) from None
+    if not os.path.isdir(path):
+        raise HTTPException(status_code=400, detail=f"{label}ディレクトリが見つかりません: {path}")
+    return path
 
 
 @router.post("/open", response_model=DirectoryMeta)
 async def open_directory(req: DirectoryOpenRequest) -> DirectoryMeta:
     root = req.path
+    try:
+        resolve_within_data_roots(root)
+    except PathNotAllowedError:
+        raise HTTPException(status_code=403, detail=OUTSIDE_DATA_ROOT_DETAIL) from None
     if not os.path.isdir(root):
         raise HTTPException(status_code=404, detail="指定されたパスが見つかりません")
 
@@ -76,12 +110,8 @@ async def open_directory(req: DirectoryOpenRequest) -> DirectoryMeta:
     except InputParseError as e:
         raise HTTPException(status_code=400, detail=f"input.dat の解析に失敗しました: {e}") from e
 
-    field2_dir = os.path.join(root, parsed_input.result_dirs["field2"])
-    hist_dir = os.path.join(root, parsed_input.result_dirs["hist"])
-    if not os.path.isdir(field2_dir):
-        raise HTTPException(status_code=400, detail=f"field2ディレクトリが見つかりません: {field2_dir}")
-    if not os.path.isdir(hist_dir):
-        raise HTTPException(status_code=400, detail=f"histディレクトリが見つかりません: {hist_dir}")
+    field2_dir = _result_dir(root, parsed_input.result_dirs["field2"], "field2")
+    hist_dir = _result_dir(root, parsed_input.result_dirs["hist"], "hist")
 
     frames = scan_plt_frames(field2_dir, parsed_input.ifit2)
     if not frames:
