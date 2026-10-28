@@ -24,10 +24,10 @@ export function recordApiRequests(page: Page): Request[] {
   return requests
 }
 
-// Plotly が描画中の図のトレース（div.js-plotly-plot に付与される data プロパティ）を読む
+// 表示中の Plotly 図のトレース（div.js-plotly-plot に付与される data プロパティ）を読む。
+// 非表示のタブも状態保持のためマウントしたままなので、見えている図に限定する
 export async function plotTraces(page: Page): Promise<Record<string, unknown>[]> {
   return page
-    .locator('.js-plotly-plot')
-    .first()
+    .locator('.js-plotly-plot:visible')
     .evaluate((el) => (el as unknown as { data: Record<string, unknown>[] }).data)
 }

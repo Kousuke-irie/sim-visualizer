@@ -20,7 +20,7 @@ test.describe('ディレクトリモード', () => {
   })
 
   test('時間スライダーでフレームを切り替えると、そのフレームのデータを取得して描画する', async ({ page }) => {
-    await expect(page.locator('.js-plotly-plot')).toBeVisible()
+    await expect(page.locator('.js-plotly-plot:visible')).toBeVisible()
 
     const responsePromise = page.waitForResponse('**/api/directory/section/data')
     await page.locator('.time-slider input[type=range]').fill('2')
@@ -33,7 +33,7 @@ test.describe('ディレクトリモード', () => {
 
   test('時系列タブで地点とパラメータを選んで深度別の時系列を表示する', async ({ page }) => {
     await page.getByText('時系列', { exact: true }).click()
-    await expect(page.locator('.js-plotly-plot')).toBeVisible()
+    await expect(page.locator('.js-plotly-plot:visible')).toBeVisible()
 
     const responsePromise = page.waitForResponse('**/api/directory/timeseries/data')
     await page.locator('.point-param-select select').first().selectOption('TEMP')
@@ -85,6 +85,6 @@ test.describe('ディレクトリモード', () => {
     await expect(page.locator('.error-banner')).toBeVisible()
 
     await page.locator('.point-param-select select').first().selectOption('TEMP')
-    await expect(page.locator('.js-plotly-plot')).toBeVisible()
+    await expect(page.locator('.js-plotly-plot:visible')).toBeVisible()
   })
 })

@@ -15,7 +15,7 @@ test.describe('断面ビュー', () => {
     await page.goto('/')
     await page.locator('input[type=file][accept=".plt"]').setInputFiles(pltPath)
     await expect(page.getByText('格子 I=4 J=5 K=3')).toBeVisible()
-    await expect(page.locator('.js-plotly-plot')).toBeVisible()
+    await expect(page.locator('.js-plotly-plot:visible')).toBeVisible()
   })
 
   test('アップロードした .plt の断面がコンター図として描画される', async ({ page }) => {
