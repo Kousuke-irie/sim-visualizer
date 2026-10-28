@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { PauseIcon, PlayIcon } from '../common/icons'
 import type { PltFrameMeta, TimeUnit } from '../../types'
+import { formatTime } from '../../utils/time'
 
 type Props = {
   frames: PltFrameMeta[]
@@ -8,10 +9,6 @@ type Props = {
   onPositionChange: (position: number) => void
   timeUnit: TimeUnit
   onTimeUnitChange: (unit: TimeUnit) => void
-}
-
-function formatTime(sec: number, unit: TimeUnit): string {
-  return unit === 'hour' ? `${(sec / 3600).toFixed(2)} h` : `${sec.toFixed(0)} s`
 }
 
 const PLAYBACK_INTERVAL_MS = 400
