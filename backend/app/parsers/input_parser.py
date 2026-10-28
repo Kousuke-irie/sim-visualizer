@@ -61,6 +61,16 @@ def _strip_comments_and_blanks(text: str) -> List[str]:
     return lines
 
 
+def _first_float(tokens: List[str], label: str) -> float:
+    """行の先頭トークンを float にする。失敗を素の ValueError/IndexError で漏らすと API が 500 になるため変換する。"""
+    if not tokens:
+        raise InputParseError(f"{label}のトークン数が不足しています")
+    try:
+        return float(tokens[0])
+    except ValueError as e:
+        raise InputParseError(f"{label}の数値変換に失敗しました: {tokens[0]!r}") from e
+
+
 def parse_input_dat(text: str) -> ParsedInput:
     cur = _LineCursor(_strip_comments_and_blanks(text))
 
@@ -79,26 +89,22 @@ def parse_input_dat(text: str) -> ParsedInput:
     cur.take_tokens()  # 3: bear
 
     dt_tokens = cur.take_tokens()  # 4: dt(nast)
-    dt = float(dt_tokens[0])
+    dt = _first_float(dt_tokens, "4行目（dt）")
 
     e_tokens = cur.take_tokens()  # 5: endtime,ntime,irst
-    if len(e_tokens) < 1:
-        raise InputParseError("5行目（endtime,ntime,irst）のトークン数が不足しています")
-    endtime = float(e_tokens[0])
+    endtime = _first_float(e_tokens, "5行目（endtime,ntime,irst）")
 
     cur.take_tokens()  # 6: dispout
     cur.take_tokens()  # 7: fifit1,fifit3,fifit4
 
     f_tokens = cur.take_tokens()  # 8: fifit2,fifit5,fifit6
-    if len(f_tokens) < 1:
-        raise InputParseError("8行目（fifit2,fifit5,fifit6）のトークン数が不足しています")
-    fifit2 = float(f_tokens[0])
+    fifit2 = _first_float(f_tokens, "8行目（fifit2,fifit5,fifit6）")
     ifit2 = int(fifit2)
     if ifit2 < 0:
         raise InputParseError("負のfifit2（明示時刻リスト指定）は本アプリでは未対応です")
 
     dx_tokens = cur.take_tokens()  # 9: dx(1)
-    dx = float(dx_tokens[0])
+    dx = _first_float(dx_tokens, "9行目（dx）")
 
     z_tokens = cur.take_tokens()  # 10: z(k)
     try:
@@ -137,7 +143,7 @@ def parse_input_dat(text: str) -> ParsedInput:
         nhist = int(float(nh_tokens[0]))
     except ValueError as e:
         raise InputParseError("nhist の数値変換に失敗しました") from e
-    histout = float(nh_tokens[1])
+    histout = _first_float(nh_tokens[1:], "nhist,histout 行の histout ")
 
     points: List[HistPointRaw] = []
     if nhist != 0:

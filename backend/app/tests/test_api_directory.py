@@ -108,3 +108,11 @@ def test_open_with_unsupported_nest_is_400(client, sim_dir):
 def test_open_nonexistent_path_is_404(client):
     res = client.post("/api/directory/open", json={"path": "/no/such/dir"})
     assert res.status_code == 404
+
+
+def test_open_with_non_numeric_input_value_is_400_not_500(client, sim_dir):
+    text = (sim_dir / "input.dat").read_text().replace("0.8                     #dt", "abc #dt")
+    (sim_dir / "input.dat").write_text(text)
+    res = client.post("/api/directory/open", json={"path": str(sim_dir)})
+    assert res.status_code == 400
+    assert "dt" in res.json()["detail"]
