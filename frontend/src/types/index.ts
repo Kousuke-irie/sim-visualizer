@@ -1,41 +1,43 @@
-export type Dims = { I: number; J: number; K: number }
-export type Coords = { X: number[]; Y: number[]; Z: number[] }
+// API の入出力型はバックエンドの Pydantic モデルから自動生成した api.gen.ts を正とする（手で書き写さない）。
+// 生成: backend で `python scripts/export_openapi.py` → frontend で `npm run gen:api`。CI が生成物の鮮度を検査する。
+import type { components } from './api.gen'
 
-export type PltMeta = {
-  file_id: string
-  kind: 'plt'
-  variables: string[]
-  dims: Dims
-  coords: Coords
-  value_ranges: Record<string, [number, number]>
-}
+type Schemas = components['schemas']
 
-export type Plane = 'XY' | 'XZ' | 'YZ'
+// --- アップロード方式（断面ビュー・時系列ビュー） ---
 
-// --- サーバーから取得する生の断面データ（描画自体はフロントで行う） ---
+export type Dims = Schemas['Dims']
+export type Coords = Schemas['Coords']
+export type PltMeta = Schemas['PltMeta']
+export type DatGrid = Schemas['DatGrid']
+export type DatMeta = Schemas['DatMeta']
 
-export type SectionDataRequest = {
-  file_id: string
-  plane: Plane
-  slice_index: number
-  variable: string
-  include_vectors: boolean
-}
+// サーバーから取得する生の断面データ（描画自体はフロントで行う）
+export type SectionDataRequest = Schemas['SectionDataRequest']
+export type SectionDataResponse = Schemas['SectionDataResponse']
+export type Plane = SectionDataRequest['plane']
 
-export type SectionDataResponse = {
-  h_coords: number[]
-  v_coords: number[]
-  h_label: string
-  v_label: string
-  values: (number | null)[][]
-  vector_h: (number | null)[][] | null
-  vector_v: (number | null)[][] | null
-  vector_h_label: string | null
-  vector_v_label: string | null
-  actual_coord: number
-  actual_index: number
-  value_range: [number, number]
-}
+// サーバーから取得する生の時系列データ（深度選択・軸範囲・単位切替はフロントのみで完結）。
+// values は shape (n_times, n_depths)、depths の並びは DatMeta.depths と対応
+export type TimeseriesDataResponse = Schemas['TimeseriesDataResponse']
+
+// --- ディレクトリモード（シミュレーション出力ディレクトリを直接指定） ---
+
+export type ResultDirs = Schemas['ResultDirs']
+export type DirectoryInputMeta = Schemas['DirectoryInputMeta']
+export type HistPoint = Schemas['HistPoint']
+export type PltFrameMeta = Schemas['PltFrameMeta']
+export type TimeseriesIndex = Schemas['TimeseriesIndex']
+export type DirectoryMeta = Schemas['DirectoryMeta']
+export type DirectoryOpenRequest = Schemas['DirectoryOpenRequest']
+export type DirectorySectionDataRequest = Schemas['DirectorySectionDataRequest']
+export type DirectorySectionDataResponse = Schemas['DirectorySectionDataResponse']
+export type DirectoryTimeseriesRequest = Schemas['DirectoryTimeseriesRequest']
+export type DirectoryTimeseriesResponse = Schemas['DirectoryTimeseriesResponse']
+export type DirectoryBrowseEntry = Schemas['DirectoryBrowseEntry']
+export type DirectoryBrowseResponse = Schemas['DirectoryBrowseResponse']
+
+// === ここから下はフロントエンドだけが持つ UI 状態（サーバーには送らない）。手書きで管理する ===
 
 // --- 表示スタイル（すべてクライアント側のみで完結し、変更は即座に反映される） ---
 
@@ -84,26 +86,7 @@ export type LabelPositions = {
   vectorKey: LabelPosition
 }
 
-// --- 時系列ビュー（.dat） ---
-
-export type DatGrid = { i: number; j: number; n: number; h: number }
-
-export type DatMeta = {
-  file_id: string
-  kind: 'dat'
-  variable: string
-  grid: DatGrid
-  depths: string[]
-  depth_values: number[]
-  time_range: [number, number]
-  n_times: number
-}
-
-// サーバーから取得する生の時系列データ（深度選択・軸範囲・単位切替はフロントのみで完結）
-export type TimeseriesDataResponse = {
-  times: number[]
-  values: number[][] // shape (n_times, n_depths)、depths の並びは DatMeta.depths と対応
-}
+// --- 時系列ビュー ---
 
 export type TimeUnit = 'sec' | 'hour'
 
@@ -115,69 +98,3 @@ export type TimeseriesParams = {
   axis: { title?: string; xlabel?: string; ylabel?: string }
   exportScale: number
 }
-
-// --- ディレクトリモード（シミュレーション出力ディレクトリを直接指定） ---
-
-export type ResultDirs = { hist: string; field1: string; field2: string }
-
-export type DirectoryInputMeta = {
-  ifit2: number
-  endtime: number
-  dt: number
-  dx: number
-  z_levels: number[]
-  nhist: number
-  histout: number
-  result_dirs: ResultDirs
-}
-
-export type HistPoint = { point: string; i: number; j: number; n: number; x: number | null; y: number | null }
-
-export type PltFrameMeta = { file: string; index: number; time_sec: number }
-
-export type TimeseriesIndex = { params: string[]; by_param: Record<string, string[]> }
-
-export type DirectoryMeta = {
-  dir_id: string
-  root: string
-  input: DirectoryInputMeta
-  points: HistPoint[]
-  plt_frames: PltFrameMeta[]
-  timeseries: TimeseriesIndex
-  plt_variables: string[]
-  plt_dims: Dims
-}
-
-export type DirectorySectionDataRequest = {
-  dir_id: string
-  frame_index: number
-  plane: Plane
-  slice_index: number
-  variable: string
-  include_vectors: boolean
-}
-
-export type DirectorySectionDataResponse = SectionDataResponse & {
-  frame_index: number
-  time_sec: number
-}
-
-export type DirectoryTimeseriesRequest = {
-  dir_id: string
-  param: string
-  point: string
-}
-
-export type DirectoryTimeseriesResponse = {
-  variable: string
-  point: string
-  grid: DatGrid
-  depths: string[]
-  depth_values: number[]
-  times: number[]
-  values: number[][]
-}
-
-export type DirectoryBrowseEntry = { name: string; path: string; has_input_dat: boolean }
-
-export type DirectoryBrowseResponse = { path: string; parent: string | null; entries: DirectoryBrowseEntry[] }
