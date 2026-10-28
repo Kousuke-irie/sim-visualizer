@@ -1,11 +1,9 @@
-import time
-
 import pytest
 
 from app.config import SESSION_TTL_SECONDS
+from app.errors import NotFoundError
 from app.parsers.dat_parser import parse_dat_text
 from app.parsers.plt_parser import parse_plt_text
-from app.services import store as store_module
 from app.services.store import Store
 from app.tests.sample_data import DX, Z_LEVELS, make_dat_text, make_plt_text, temp_value
 
@@ -26,11 +24,11 @@ def test_entries_are_typed_by_kind():
     plt_id = store.add_plt(parse_plt_text(make_plt_text())).file_id
     dat_id = store.add_dat("DIC", parse_dat_text(make_dat_text())).file_id
 
-    assert store.get_entry(plt_id).variables[0] == "X"
+    assert store.get_plt(plt_id).variables[0] == "X"
     assert store.get_dat_entry(dat_id).variable == "DIC"
-    with pytest.raises(KeyError):
-        store.get_entry(dat_id)
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
+        store.get_plt(dat_id)
+    with pytest.raises(NotFoundError):
         store.get_dat_entry(plt_id)
 
 
@@ -38,19 +36,16 @@ def test_delete_removes_entry():
     store = Store()
     file_id = store.add_plt(parse_plt_text(make_plt_text())).file_id
     store.delete(file_id)
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         store.get_meta(file_id)
 
 
-def test_expired_entries_are_purged_on_next_add(monkeypatch):
-    # PltEntry.last_access の default_factory は本物の time.time を束縛済みなので、実時刻を起点に進める
-    now = [time.time()]
-    monkeypatch.setattr(store_module.time, "time", lambda: now[0])
-    store = Store()
+def test_expired_entries_are_dropped():
+    now = [0.0]
+    store = Store(clock=lambda: now[0])
     old_id = store.add_plt(parse_plt_text(make_plt_text())).file_id
 
     now[0] += SESSION_TTL_SECONDS + 1
-    store.add_plt(parse_plt_text(make_plt_text()))
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         store.get_meta(old_id)

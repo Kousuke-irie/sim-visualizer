@@ -1,18 +1,16 @@
 import pytest
 
 from app.models.section import SectionDataRequest
-from app.parsers.plt_parser import parse_plt_text
+from app.parsers.plt_parser import ParsedPlt, parse_plt_text
 from app.services.section_data import SectionDataError, extract_section_data
-from app.services.store import PltEntry
 from app.tests.sample_data import DX, Z_LEVELS, make_plt_text, temp_value
 
 NI, NJ, NK = 4, 5, 3
 
 
 @pytest.fixture
-def entry() -> PltEntry:
-    parsed = parse_plt_text(make_plt_text(NI, NJ, NK))
-    return PltEntry(variables=parsed.variables, dims=parsed.dims, grid=parsed.grid)
+def entry() -> ParsedPlt:
+    return parse_plt_text(make_plt_text(NI, NJ, NK))
 
 
 def request(plane: str, slice_index: int, variable: str = "TEMP", include_vectors: bool = True) -> SectionDataRequest:

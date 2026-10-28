@@ -4,10 +4,11 @@ input.dat のパース結果・field2/hist の走査結果を dir_id 単位で�
 """
 
 import time
-import uuid
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from dataclasses import dataclass
 
 from app.config import SESSION_TTL_SECONDS
+from app.errors import NotFoundError
 from app.models.common import Dims
 from app.models.directory import (
     DirectoryInputMeta,
@@ -20,6 +21,8 @@ from app.models.directory import (
 from app.parsers.dir_scanner import PltFrameRaw, TimeseriesIndexRaw
 from app.parsers.input_parser import ParsedInput
 from app.parsers.plt_parser import ParsedPlt
+from app.services.plt_cache import plt_cache
+from app.services.ttl_store import TTLStore
 
 
 @dataclass
@@ -32,12 +35,15 @@ class DirectoryEntry:
     ts_index: TimeseriesIndexRaw
     plt_variables: list[str]
     plt_dims: dict[str, int]
-    last_access: float = field(default_factory=time.time)
 
 
 class DirectoryStore:
-    def __init__(self) -> None:
-        self._entries: dict[str, DirectoryEntry] = {}
+    def __init__(
+        self,
+        clock: Callable[[], float] = time.time,
+        on_expire: Callable[[str, DirectoryEntry], None] | None = None,
+    ) -> None:
+        self._entries: TTLStore[DirectoryEntry] = TTLStore(SESSION_TTL_SECONDS, clock=clock, on_expire=on_expire)
 
     def add(
         self,
@@ -49,8 +55,6 @@ class DirectoryStore:
         ts_index: TimeseriesIndexRaw,
         first_frame: ParsedPlt,
     ) -> DirectoryMeta:
-        self._purge_expired()
-        dir_id = uuid.uuid4().hex
         entry = DirectoryEntry(
             root=root,
             field2_dir=field2_dir,
@@ -61,25 +65,16 @@ class DirectoryStore:
             plt_variables=first_frame.variables,
             plt_dims=first_frame.dims,
         )
-        self._entries[dir_id] = entry
-        return self._build_meta(dir_id, entry)
+        return self._build_meta(self._entries.add(entry), entry)
 
     def get(self, dir_id: str) -> DirectoryEntry:
-        entry = self._entries.get(dir_id)
-        if entry is None:
-            raise KeyError(dir_id)
-        entry.last_access = time.time()
-        return entry
+        try:
+            return self._entries.get(dir_id)
+        except KeyError:
+            raise NotFoundError("指定されたdir_idが見つかりません") from None
 
     def get_meta(self, dir_id: str) -> DirectoryMeta:
-        entry = self.get(dir_id)
-        return self._build_meta(dir_id, entry)
-
-    def _purge_expired(self) -> None:
-        now = time.time()
-        expired = [did for did, e in self._entries.items() if now - e.last_access > SESSION_TTL_SECONDS]
-        for did in expired:
-            self._entries.pop(did, None)
+        return self._build_meta(dir_id, self.get(dir_id))
 
     @staticmethod
     def _build_meta(dir_id: str, entry: DirectoryEntry) -> DirectoryMeta:
@@ -105,4 +100,5 @@ class DirectoryStore:
         )
 
 
-directory_store = DirectoryStore()
+# 期限切れのディレクトリのフレームは二度と参照されないので、LRU で押し出されるのを待たずに捨てる
+directory_store = DirectoryStore(on_expire=lambda dir_id, _entry: plt_cache.invalidate_dir(dir_id))

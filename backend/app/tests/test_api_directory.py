@@ -116,3 +116,20 @@ def test_open_with_non_numeric_input_value_is_400_not_500(client, sim_dir):
     res = client.post("/api/directory/open", json={"path": str(sim_dir)})
     assert res.status_code == 400
     assert "dt" in res.json()["detail"]
+
+
+def test_first_frame_parsed_on_open_is_reused_without_reparsing(client, sim_dir, monkeypatch):
+    # open 時に最初のフレームをパースしているので、その結果をキャッシュに入れて再パースを避ける
+    from app.services import plt_cache as plt_cache_module
+
+    meta = client.post("/api/directory/open", json={"path": str(sim_dir)}).json()
+    calls = []
+    original = plt_cache_module.parse_plt_bytes
+    monkeypatch.setattr(plt_cache_module, "parse_plt_bytes", lambda b: calls.append(b) or original(b))
+
+    res = client.post(
+        "/api/directory/section/data",
+        json={"dir_id": meta["dir_id"], "frame_index": 0, "plane": "XY", "slice_index": 0, "variable": "TEMP"},
+    )
+    assert res.status_code == 200
+    assert calls == []

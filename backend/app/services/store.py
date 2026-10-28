@@ -1,27 +1,21 @@
 """アップロード済みデータのインメモリ管理。
 
 パース済みの NumPy 配列をプロセス内メモリに保持し、パラメータ変更のたびに
-再パースせず抽出・描画のみ行う。TTLを過ぎたエントリはアクセス時に破棄する。
+再パースせず抽出・描画のみ行う。有効期限の管理は TTLStore に任せる。
 """
 
 import time
-import uuid
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from dataclasses import dataclass
 
 import numpy as np
 
 from app.config import MISSING_VALUE, SESSION_TTL_SECONDS
+from app.errors import NotFoundError
 from app.models.common import Coords, DatGrid, DatMeta, Dims, PltMeta
 from app.parsers.dat_parser import ParsedDat
 from app.parsers.plt_parser import ParsedPlt
-
-
-@dataclass
-class PltEntry:
-    variables: list[str]
-    dims: dict[str, int]
-    grid: np.ndarray  # shape (K, J, I, nvar)
-    last_access: float = field(default_factory=time.time)
+from app.services.ttl_store import TTLStore
 
 
 @dataclass
@@ -32,26 +26,23 @@ class DatEntry:
     depth_values: list[float]
     times: np.ndarray  # shape (n_times,)
     values: np.ndarray  # shape (n_times, n_depths)
-    last_access: float = field(default_factory=time.time)
 
 
-Entry = PltEntry | DatEntry
+# .plt はパース結果そのものを保持する。.dat はファイル名由来の変数名を添えて保持する
+Entry = ParsedPlt | DatEntry
+
+
+FILE_NOT_FOUND = "指定されたfile_idが見つかりません"
 
 
 class Store:
-    def __init__(self) -> None:
-        self._entries: dict[str, Entry] = {}
+    def __init__(self, clock: Callable[[], float] = time.time) -> None:
+        self._entries: TTLStore[Entry] = TTLStore(SESSION_TTL_SECONDS, clock=clock)
 
     def add_plt(self, parsed: ParsedPlt) -> PltMeta:
-        self._purge_expired()
-        file_id = uuid.uuid4().hex
-        entry = PltEntry(variables=parsed.variables, dims=parsed.dims, grid=parsed.grid)
-        self._entries[file_id] = entry
-        return self._build_plt_meta(file_id, entry)
+        return self._build_plt_meta(self._entries.add(parsed), parsed)
 
     def add_dat(self, variable: str, parsed: ParsedDat) -> DatMeta:
-        self._purge_expired()
-        file_id = uuid.uuid4().hex
         entry = DatEntry(
             variable=variable,
             grid=parsed.grid,
@@ -60,43 +51,37 @@ class Store:
             times=parsed.times,
             values=parsed.values,
         )
-        self._entries[file_id] = entry
-        return self._build_dat_meta(file_id, entry)
+        return self._build_dat_meta(self._entries.add(entry), entry)
 
-    def get_entry(self, file_id: str) -> PltEntry:
-        entry = self._entries.get(file_id)
-        if not isinstance(entry, PltEntry):
-            raise KeyError(file_id)
-        entry.last_access = time.time()
+    def get_plt(self, file_id: str) -> ParsedPlt:
+        entry = self._get(file_id)
+        if not isinstance(entry, ParsedPlt):
+            raise NotFoundError(FILE_NOT_FOUND)
         return entry
 
     def get_dat_entry(self, file_id: str) -> DatEntry:
-        entry = self._entries.get(file_id)
+        entry = self._get(file_id)
         if not isinstance(entry, DatEntry):
-            raise KeyError(file_id)
-        entry.last_access = time.time()
+            raise NotFoundError(FILE_NOT_FOUND)
         return entry
 
     def get_meta(self, file_id: str) -> PltMeta | DatMeta:
-        entry = self._entries.get(file_id)
-        if entry is None:
-            raise KeyError(file_id)
-        entry.last_access = time.time()
-        if isinstance(entry, PltEntry):
+        entry = self._get(file_id)
+        if isinstance(entry, ParsedPlt):
             return self._build_plt_meta(file_id, entry)
         return self._build_dat_meta(file_id, entry)
 
     def delete(self, file_id: str) -> None:
-        self._entries.pop(file_id, None)
+        self._entries.delete(file_id)
 
-    def _purge_expired(self) -> None:
-        now = time.time()
-        expired = [fid for fid, e in self._entries.items() if now - e.last_access > SESSION_TTL_SECONDS]
-        for fid in expired:
-            self._entries.pop(fid, None)
+    def _get(self, file_id: str) -> Entry:
+        try:
+            return self._entries.get(file_id)
+        except KeyError:
+            raise NotFoundError(FILE_NOT_FOUND) from None
 
     @staticmethod
-    def _build_plt_meta(file_id: str, entry: PltEntry) -> PltMeta:
+    def _build_plt_meta(file_id: str, entry: ParsedPlt) -> PltMeta:
         idx_var = {name: i for i, name in enumerate(entry.variables)}
         grid = entry.grid
 

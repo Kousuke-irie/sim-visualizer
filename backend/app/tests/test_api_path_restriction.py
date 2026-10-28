@@ -1,7 +1,7 @@
 """データルート外へのアクセス制限（browse / open / input.dat 内の出力先）とアップロード上限。"""
 
 from app.config import DATA_ROOTS_ENV
-from app.routers import upload as upload_module
+from app.services import uploads as upload_module
 from app.tests.sample_data import write_simulation_dir
 
 

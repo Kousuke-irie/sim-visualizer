@@ -65,8 +65,8 @@ PYTHON="$PWD/../backend/.venv/bin/python" npm run e2e
 | 層 | 置き場所 | ルール |
 |---|---|---|
 | パーサ | `backend/app/parsers/` | 外部ファイル形式の解釈のみ。FastAPI に依存しない。専用の例外を投げる |
-| サービス | `backend/app/services/` | NumPy による抽出・キャッシュ・ストア。HTTP を知らない |
-| ルーター | `backend/app/routers/` | 入出力の検証と例外 → HTTP ステータスの変換だけを行う |
+| サービス | `backend/app/services/` | 業務処理（ファイル読み込み・抽出・キャッシュ・ストア）。HTTP を知らず、失敗は `app/errors.py` の業務エラー（日本語の detail）で投げる |
+| ルーター | `backend/app/routers/` | リクエストをサービスに渡して結果を返すだけ。`HTTPException` は使わない（業務エラー → ステータスの変換は `main.py` の例外ハンドラ1か所） |
 | モデル | `backend/app/models/` | Pydantic スキーマ（`ApiModel` を継承）。変更したら `python scripts/export_openapi.py` → `npm run gen:api` で TS 型を再生成してコミットする（CI が鮮度を検査）。`api.gen.ts` は手で編集しない |
 | 描画ロジック | `frontend/src/components/**/*Figure.ts` など | React に依存しない純粋関数にして Vitest でテストする |
 | コンポーネント | `frontend/src/components/` | 状態管理と表示のみ。計算はロジック側に寄せる |

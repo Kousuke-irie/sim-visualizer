@@ -11,8 +11,9 @@ X, Y, Z はそれぞれ I, J, K のみに依存する矩形格子であること
 import numpy as np
 
 from app.config import MISSING_VALUE
+from app.errors import InvalidInputError
 from app.models.section import SectionDataRequest, SectionDataResponse
-from app.services.store import PltEntry
+from app.parsers.plt_parser import ParsedPlt
 
 # grid_axis: entry.grid の shape (K, J, I, nvar) のうち、固定するスライス軸のインデックス
 PLANE_CONFIG = {
@@ -24,8 +25,8 @@ PLANE_CONFIG = {
 AXIS_COORD_VAR = {"I": "X", "J": "Y", "K": "Z"}
 
 
-class SectionDataError(ValueError):
-    pass
+class SectionDataError(InvalidInputError):
+    """指定した断面・変数が取り出せない（400）"""
 
 
 def _mask_missing(arr: np.ndarray) -> np.ma.MaskedArray:
@@ -38,7 +39,7 @@ def _to_nested_list(masked: np.ma.MaskedArray) -> list[list[float | None]]:
     return [[None if mask[i, j] else float(data[i, j]) for j in range(data.shape[1])] for i in range(data.shape[0])]
 
 
-def extract_section_data(entry: PltEntry, req: SectionDataRequest) -> SectionDataResponse:
+def extract_section_data(entry: ParsedPlt, req: SectionDataRequest) -> SectionDataResponse:
     cfg = PLANE_CONFIG[req.plane]
     idx_var: dict[str, int] = {name: i for i, name in enumerate(entry.variables)}
 
