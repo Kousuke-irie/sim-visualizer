@@ -26,7 +26,6 @@ from app.services.path_policy import (
 )
 from app.services.plt_cache import plt_cache
 from app.services.section_data import SectionDataError, extract_section_data
-from app.services.store import PltEntry
 
 router = APIRouter(prefix="/api/directory", tags=["directory"])
 
@@ -154,9 +153,8 @@ async def get_directory_section_data(req: DirectorySectionDataRequest) -> Direct
     except PltParseError as e:
         raise HTTPException(status_code=400, detail=f"pltファイルの解析に失敗しました: {e}") from e
 
-    plt_entry = PltEntry(variables=parsed_frame.variables, dims=parsed_frame.dims, grid=parsed_frame.grid)
     try:
-        section_data = extract_section_data(plt_entry, req)
+        section_data = extract_section_data(parsed_frame, req)
     except SectionDataError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 

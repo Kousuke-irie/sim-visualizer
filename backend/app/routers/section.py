@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/section", tags=["section"])
 @router.post("/data", response_model=SectionDataResponse)
 async def get_section_data(req: SectionDataRequest) -> SectionDataResponse:
     try:
-        entry = store.get_entry(req.file_id)
+        entry = store.get_plt(req.file_id)
     except KeyError:
         raise HTTPException(status_code=404, detail="指定されたfile_idが見つかりません") from None
 

@@ -23,10 +23,10 @@ def test_entries_are_typed_by_kind():
     plt_id = store.add_plt(parse_plt_text(make_plt_text())).file_id
     dat_id = store.add_dat("DIC", parse_dat_text(make_dat_text())).file_id
 
-    assert store.get_entry(plt_id).variables[0] == "X"
+    assert store.get_plt(plt_id).variables[0] == "X"
     assert store.get_dat_entry(dat_id).variable == "DIC"
     with pytest.raises(KeyError):
-        store.get_entry(dat_id)
+        store.get_plt(dat_id)
     with pytest.raises(KeyError):
         store.get_dat_entry(plt_id)
 

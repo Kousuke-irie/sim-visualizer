@@ -18,13 +18,6 @@ from app.services.ttl_store import TTLStore
 
 
 @dataclass
-class PltEntry:
-    variables: list[str]
-    dims: dict[str, int]
-    grid: np.ndarray  # shape (K, J, I, nvar)
-
-
-@dataclass
 class DatEntry:
     variable: str
     grid: dict[str, float]  # {"i": .., "j": .., "n": .., "h": ..}
@@ -34,7 +27,8 @@ class DatEntry:
     values: np.ndarray  # shape (n_times, n_depths)
 
 
-Entry = PltEntry | DatEntry
+# .plt はパース結果そのものを保持する。.dat はファイル名由来の変数名を添えて保持する
+Entry = ParsedPlt | DatEntry
 
 
 class Store:
@@ -42,8 +36,7 @@ class Store:
         self._entries: TTLStore[Entry] = TTLStore(SESSION_TTL_SECONDS, clock=clock)
 
     def add_plt(self, parsed: ParsedPlt) -> PltMeta:
-        entry = PltEntry(variables=parsed.variables, dims=parsed.dims, grid=parsed.grid)
-        return self._build_plt_meta(self._entries.add(entry), entry)
+        return self._build_plt_meta(self._entries.add(parsed), parsed)
 
     def add_dat(self, variable: str, parsed: ParsedDat) -> DatMeta:
         entry = DatEntry(
@@ -56,9 +49,9 @@ class Store:
         )
         return self._build_dat_meta(self._entries.add(entry), entry)
 
-    def get_entry(self, file_id: str) -> PltEntry:
+    def get_plt(self, file_id: str) -> ParsedPlt:
         entry = self._entries.get(file_id)
-        if not isinstance(entry, PltEntry):
+        if not isinstance(entry, ParsedPlt):
             raise KeyError(file_id)
         return entry
 
@@ -70,7 +63,7 @@ class Store:
 
     def get_meta(self, file_id: str) -> PltMeta | DatMeta:
         entry = self._entries.get(file_id)
-        if isinstance(entry, PltEntry):
+        if isinstance(entry, ParsedPlt):
             return self._build_plt_meta(file_id, entry)
         return self._build_dat_meta(file_id, entry)
 
@@ -78,7 +71,7 @@ class Store:
         self._entries.delete(file_id)
 
     @staticmethod
-    def _build_plt_meta(file_id: str, entry: PltEntry) -> PltMeta:
+    def _build_plt_meta(file_id: str, entry: ParsedPlt) -> PltMeta:
         idx_var = {name: i for i, name in enumerate(entry.variables)}
         grid = entry.grid
 
