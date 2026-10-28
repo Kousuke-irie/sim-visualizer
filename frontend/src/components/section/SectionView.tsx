@@ -3,9 +3,9 @@ import FileUpload from '../common/FileUpload'
 import ErrorBanner from '../common/ErrorBanner'
 import SectionPlot from './SectionPlot'
 import SectionControls from './SectionControls'
-import { uploadPlt } from '../../api/client'
+import { fetchSectionData, uploadPlt } from '../../api/client'
 import { useDebounced } from '../../hooks/useDebounced'
-import { useSectionData } from '../../hooks/useRender'
+import { useLatestRequest } from '../../hooks/useLatestRequest'
 import type { PltMeta, Plane, SectionDataRequest, SectionParams } from '../../types'
 import { COORD_VAR_LABEL, PLANE_AXIS, createDefaultSectionParams, midIndex, sliceAxisSize } from './sectionDefaults'
 
@@ -52,7 +52,7 @@ export default function SectionView() {
   }, [fileId, plane, sliceIndex, variable])
 
   const debouncedRequest = useDebounced(dataRequest, 150)
-  const { data, loading, error: dataError } = useSectionData(debouncedRequest)
+  const { data, loading, error: dataError } = useLatestRequest(debouncedRequest, fetchSectionData)
 
   const axisSize = meta && params ? sliceAxisSize(meta.dims, params.plane) : 0
   const datasetKey = meta && params ? `${meta.file_id}-${params.plane}-${params.sliceIndex}-${params.variable}` : ''

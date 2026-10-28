@@ -15,13 +15,13 @@ import {
   midIndex,
   sliceAxisSize,
 } from '../section/sectionDefaults'
-import { fetchDirectoryTimeseriesData, openDirectory } from '../../api/client'
+import { fetchDirectorySectionData, fetchDirectoryTimeseriesData, openDirectory } from '../../api/client'
 import { useDebounced } from '../../hooks/useDebounced'
-import { useDirectorySectionData } from '../../hooks/useRender'
+import { useLatestRequest } from '../../hooks/useLatestRequest'
 import type {
   DirectoryMeta,
   DirectorySectionDataRequest,
-  DirectoryTimeseriesResponse,
+  DirectoryTimeseriesRequest,
   Plane,
   SectionParams,
   TimeseriesParams,
@@ -44,9 +44,6 @@ export default function DirectoryView() {
   // 時系列サブビューの状態
   const [tsParam, setTsParam] = useState('')
   const [tsPoint, setTsPoint] = useState('')
-  const [tsData, setTsData] = useState<DirectoryTimeseriesResponse | null>(null)
-  const [tsLoading, setTsLoading] = useState(false)
-  const [tsError, setTsError] = useState<string | null>(null)
   const [tsParams, setTsParams] = useState<TimeseriesParams | null>(null)
 
   async function handleOpen(path: string) {
@@ -63,7 +60,6 @@ export default function DirectoryView() {
       const firstPoint = newMeta.timeseries.by_param[firstParam]?.[0] ?? ''
       setTsParam(firstParam)
       setTsPoint(firstPoint)
-      setTsData(null)
       setTsParams(null)
     } catch (err) {
       setOpenError(err instanceof Error ? err.message : 'ディレクトリを開けませんでした')
@@ -113,29 +109,18 @@ export default function DirectoryView() {
     data: sectionData,
     loading: sectionLoading,
     error: sectionError,
-  } = useDirectorySectionData(debouncedSectionRequest)
+  } = useLatestRequest(debouncedSectionRequest, fetchDirectorySectionData)
 
+  const tsRequest = useMemo<DirectoryTimeseriesRequest | null>(
+    () => (dirId && tsParam && tsPoint ? { dir_id: dirId, param: tsParam, point: tsPoint } : null),
+    [dirId, tsParam, tsPoint],
+  )
+  const { data: tsData, loading: tsLoading, error: tsError } = useLatestRequest(tsRequest, fetchDirectoryTimeseriesData)
+
+  // 取り直したら、見た目の設定は残したまま深度の選択だけを新しいデータに合わせる
   useEffect(() => {
-    if (!dirId || !tsParam || !tsPoint) return
-    let cancelled = false
-    setTsLoading(true)
-    setTsError(null)
-    fetchDirectoryTimeseriesData({ dir_id: dirId, param: tsParam, point: tsPoint })
-      .then((res) => {
-        if (cancelled) return
-        setTsData(res)
-        setTsParams((prev) => reconcileTimeseriesParams(prev, res.depths))
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setTsError(err.message)
-      })
-      .finally(() => {
-        if (!cancelled) setTsLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [dirId, tsParam, tsPoint])
+    if (tsData) setTsParams((prev) => reconcileTimeseriesParams(prev, tsData.depths))
+  }, [tsData])
 
   function handlePointParamChange(patch: { param?: string; point?: string }) {
     if (!meta) return
