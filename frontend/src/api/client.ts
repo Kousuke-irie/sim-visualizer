@@ -14,10 +14,28 @@ import type {
 
 const BASE = '/api'
 
+type ValidationIssue = { loc?: unknown[]; msg?: unknown }
+
+// バックエンドの業務エラーは detail が日本語の文字列だが、FastAPI の 422（リクエスト検証エラー）は
+// detail がオブジェクトの配列になる。そのまま Error に渡すと "[object Object]" と表示されるため整形する。
+export function formatErrorDetail(detail: unknown, fallback: string): string {
+  if (typeof detail === 'string' && detail) return detail
+  if (Array.isArray(detail) && detail.length > 0) {
+    const parts = (detail as ValidationIssue[]).map((issue) => {
+      // loc の先頭は 'body' / 'query' などの位置なので、項目名だけを残す
+      const field = Array.isArray(issue.loc) ? issue.loc.slice(1).join('.') : ''
+      const msg = typeof issue.msg === 'string' ? issue.msg : ''
+      return field ? `${field}: ${msg}` : msg
+    })
+    return `入力が不正です: ${parts.join(' / ')}`
+  }
+  return fallback
+}
+
 async function safeErrorMessage(res: Response, fallback: string): Promise<string> {
   try {
     const body = await res.json()
-    return body?.detail ?? fallback
+    return formatErrorDetail(body?.detail, fallback)
   } catch {
     return fallback
   }
