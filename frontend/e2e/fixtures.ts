@@ -1,16 +1,16 @@
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Page, Request } from '@playwright/test'
+import { E2E_DATA_ROOT } from './dataRoot'
 
 const BACKEND_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../../backend')
 
 // backend/app/tests/sample_data.py で、実データと同じ形式の合成計算結果ディレクトリを作る。
 // 格子 I=4, J=5, K=3、フレーム 3 枚（ifit2=3600s）、hist は TEMP/DOX × 地点 01/02。
 export function createSimulationDir(): string {
-  const root = join(mkdtempSync(join(tmpdir(), 'simviz-e2e-')), 'sim')
+  const root = join(mkdtempSync(join(E2E_DATA_ROOT, 'case-')), 'sim')
   execFileSync(process.env.PYTHON ?? 'python', ['-m', 'app.tests.sample_data', root], { cwd: BACKEND_DIR })
   return root
 }

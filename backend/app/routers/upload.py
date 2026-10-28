@@ -3,6 +3,7 @@ from typing import Union
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
+from app.config import MAX_UPLOAD_BYTES
 from app.models.common import DatMeta, PltMeta
 from app.parsers.dat_parser import DatParseError, parse_dat_bytes
 from app.parsers.plt_parser import PltParseError, parse_plt_bytes
@@ -19,7 +20,12 @@ async def upload_file(file: UploadFile = File(...)) -> Union[PltMeta, DatMeta]:
     if ext not in (".plt", ".dat"):
         raise HTTPException(status_code=400, detail="対応していないファイル形式です（.plt / .dat のみ対応）")
 
-    content = await file.read()
+    # 上限+1バイトだけ読めば超過を判定できる。全体を読んでから判定するとメモリを使い切りうる
+    content = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=413, detail=f"ファイルが大きすぎます（上限 {MAX_UPLOAD_BYTES // (1024 * 1024)} MB）"
+        )
 
     if ext == ".plt":
         try:

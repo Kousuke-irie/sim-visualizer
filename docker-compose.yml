@@ -5,6 +5,9 @@ services:
     volumes:
       - ./backend:/app
       - ${DATA_DIR:-./data}:/data:ro
+    environment:
+      # ディレクトリモードで開けるのはマウントした /data 配下のみ（DESIGN_directory_mode.md 2.1）
+      SIMVIZ_DATA_ROOTS: /data
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:

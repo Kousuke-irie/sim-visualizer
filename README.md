@@ -32,6 +32,7 @@ docker compose up
 ```
 
 http://localhost:5173 を開きます。`DATA_DIR` はコンテナ内の `/data` に読み取り専用でマウントされます。
+ディレクトリモードで開けるのはこの `/data` 配下だけです（Docker を使わずに起動する場合は、環境変数 `SIMVIZ_DATA_ROOTS` で計算結果の親ディレクトリを指定します）。
 
 ## 開発・テスト
 

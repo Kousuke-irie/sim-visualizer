@@ -19,7 +19,7 @@ def test_browse_lists_subdirectories_and_flags_input_dat(tmp_path):
     body = res.json()
 
     assert body["path"] == str(tmp_path)
-    assert body["parent"] == str(tmp_path.parent)
+    assert body["parent"] is None  # tmp_path がデータルートなので、それより上には戻れない
     names = {e["name"]: e["has_input_dat"] for e in body["entries"]}
     # 直接 input.dat を持つものは has_input_dat=True、子孫に持つだけのものは False で残す。
     # input.dat をどこにも持たないディレクトリは一覧から除外する。
@@ -41,12 +41,11 @@ def test_browse_respects_max_depth(tmp_path):
     assert "too_deep" not in names
 
 
-def test_browse_root_has_no_parent():
+def test_browse_filesystem_root_is_outside_data_root():
     res = client.get("/api/directory/browse", params={"path": "/"})
-    assert res.status_code == 200
-    assert res.json()["parent"] is None
+    assert res.status_code == 403
 
 
-def test_browse_nonexistent_path_returns_404():
-    res = client.get("/api/directory/browse", params={"path": "/no/such/path/at/all"})
+def test_browse_nonexistent_path_returns_404(tmp_path):
+    res = client.get("/api/directory/browse", params={"path": str(tmp_path / "no" / "such")})
     assert res.status_code == 404

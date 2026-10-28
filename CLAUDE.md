@@ -23,7 +23,9 @@
 3. **未対応のものは黙って誤動作させず、明示的にエラーにする。** 例: `nest>1`、負の `fifit2`。
    パーサは専用の例外 → ルーターで 4xx の `HTTPException`（日本語の detail）に変換する。
 4. **バックエンドは単一ワーカー前提。** ストアはインメモリなので `uvicorn --workers` を増やさない。
-5. **研究データ・個人情報をコミットしない。** `data/`、`.env`、`PORTFOLIO.md`、`.claude/settings.local.json` は `.gitignore` 済み。
+5. **サーバー上のパスはデータルート配下に限定する。** ファイルを開く処理を追加するときは、ユーザー入力でも
+   データファイルの中身でも、必ず `services/path_policy.py` を通す。
+6. **研究データ・個人情報をコミットしない。** `data/`、`.env`、`PORTFOLIO.md`、`.claude/settings.local.json` は `.gitignore` 済み。
    テストデータは `backend/app/tests/sample_data.py` の合成データを使う。
 
 ## 3. 作業の進め方
@@ -72,6 +74,8 @@ PYTHON="$PWD/../backend/.venv/bin/python" npm run e2e
 ## 6. ローカル実行のヒント
 
 - 通常は `docker compose up`（http://localhost:5173）。`DATA_DIR` は `.env` で指定する。
+- Docker を使わずにバックエンドを起動するときは、`SIMVIZ_DATA_ROOTS=<計算結果の親ディレクトリ>` を指定する
+  （未指定だと `/data` 以外は開けない。DESIGN_directory_mode.md 2.1）。
 - Docker を使わずに Vite を起動するときは `API_PROXY_TARGET=http://127.0.0.1:8000 npm run dev`。
   `vite.config.ts` を一時的に書き換える必要はない（DESIGN.md 17-4 / 18-4 に書いた回避策はもう不要）。
 - 動作確認用の計算結果ディレクトリは `cd backend && .venv/bin/python -m app.tests.sample_data <出力先>` で作れる。
