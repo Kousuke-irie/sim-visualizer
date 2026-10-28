@@ -26,12 +26,16 @@ class PltCache:
         with open(path, "rb") as f:
             content = f.read()
         parsed = parse_plt_bytes(content)
+        self.put(dir_id, frame_index, parsed)
+        return parsed
 
+    def put(self, dir_id: str, frame_index: int, parsed: ParsedPlt) -> None:
+        """別の経路でパース済みのフレームを登録する（ディレクトリを開いたときの最初のフレームなど）。"""
+        key = (dir_id, frame_index)
         self._data[key] = parsed
         self._data.move_to_end(key)
         if len(self._data) > self._capacity:
             self._data.popitem(last=False)
-        return parsed
 
     def invalidate_dir(self, dir_id: str) -> None:
         for key in [k for k in self._data if k[0] == dir_id]:

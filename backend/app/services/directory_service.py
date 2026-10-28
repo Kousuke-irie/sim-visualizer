@@ -66,7 +66,10 @@ def open_directory(root: str) -> DirectoryMeta:
     except PltParseError as e:
         raise InvalidInputError(f"最初のpltファイルの解析に失敗しました: {e}") from e
 
-    return directory_store.add(root, field2_dir, hist_dir, parsed_input, frames, ts_index, first_frame)
+    meta = directory_store.add(root, field2_dir, hist_dir, parsed_input, frames, ts_index, first_frame)
+    # 変数名と格子寸法を得るためにパースした最初のフレームを、そのままキャッシュに入れて再パースを避ける
+    plt_cache.put(meta.dir_id, frames[0].index, first_frame)
+    return meta
 
 
 def get_section_data(req: DirectorySectionDataRequest) -> DirectorySectionDataResponse:
