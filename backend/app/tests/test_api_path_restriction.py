@@ -1,6 +1,7 @@
-"""データルート外へのアクセス制限（browse / open / input.dat 内の出力先）。"""
+"""データルート外へのアクセス制限（browse / open / input.dat 内の出力先）とアップロード上限。"""
 
 from app.config import DATA_ROOTS_ENV
+from app.routers import upload as upload_module
 from app.tests.sample_data import write_simulation_dir
 
 
@@ -76,3 +77,8 @@ def test_result_dir_absolute_path_outside_is_400(client, data_root, tmp_path_fac
     assert res.status_code == 400
     assert "hist" in res.json()["detail"]
 
+
+def test_upload_larger_than_limit_is_413(client, monkeypatch):
+    monkeypatch.setattr(upload_module, "MAX_UPLOAD_BYTES", 16)
+    res = client.post("/api/upload", files={"file": ("big.plt", b"x" * 17, "application/octet-stream")})
+    assert res.status_code == 413

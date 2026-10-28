@@ -15,6 +15,9 @@ CORS_ALLOW_ORIGINS = [
 DATA_ROOTS_ENV = "SIMVIZ_DATA_ROOTS"
 DEFAULT_DATA_ROOTS = ["/data"]
 
+# 実データの .plt は1ファイル約10MB。桁違いに大きいものは誤操作とみなし、メモリを使い切る前に拒否する
+MAX_UPLOAD_BYTES = 100 * 1024 * 1024
+
 
 def data_roots() -> list[str]:
     # テストや起動方法ごとに切り替えられるよう、import 時ではなく呼び出しのたびに読む
