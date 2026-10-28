@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import ControlGroup from '../common/ControlGroup'
 import { AspectIcon, CompassIcon, GridIcon, ImageIcon, LayersIcon, PaletteIcon, WindIcon } from '../common/icons'
 import ColorSwatchPicker from '../common/ColorSwatchPicker'
 import ColormapSelect from '../common/ColormapSelect'
@@ -18,18 +18,6 @@ type Props = {
 }
 
 const PLANES: Plane[] = ['XY', 'XZ', 'YZ']
-
-function ControlGroup({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
-  return (
-    <div className="control-group">
-      <div className="control-group__header">
-        {icon}
-        <span>{title}</span>
-      </div>
-      <div className="control-group__body">{children}</div>
-    </div>
-  )
-}
 
 export default function SectionControls({ meta, params, axisSize, axisCoordLabel, onPlaneChange, onChange }: Props) {
   return (

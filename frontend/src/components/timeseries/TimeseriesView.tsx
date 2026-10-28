@@ -5,17 +5,7 @@ import TimeseriesControls from './TimeseriesControls'
 import TimeseriesPlot from './TimeseriesPlot'
 import { uploadDat, fetchTimeseriesData } from '../../api/client'
 import type { DatMeta, TimeseriesDataResponse, TimeseriesParams } from '../../types'
-
-function defaultParams(meta: DatMeta): TimeseriesParams {
-  return {
-    selectedDepths: [...meta.depths],
-    timeUnit: 'sec',
-    timeRange: { auto: true },
-    valueRange: { auto: true },
-    axis: {},
-    exportScale: 2,
-  }
-}
+import { createDefaultTimeseriesParams } from './timeseriesParams'
 
 export default function TimeseriesView() {
   const [meta, setMeta] = useState<DatMeta | null>(null)
@@ -33,7 +23,7 @@ export default function TimeseriesView() {
     try {
       const newMeta = await uploadDat(file)
       setMeta(newMeta)
-      setParams(defaultParams(newMeta))
+      setParams(createDefaultTimeseriesParams(newMeta.depths))
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : 'アップロードに失敗しました')
     } finally {

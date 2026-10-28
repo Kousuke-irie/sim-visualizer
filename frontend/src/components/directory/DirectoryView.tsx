@@ -8,11 +8,17 @@ import SectionPlot from '../section/SectionPlot'
 import TimeseriesControls from '../timeseries/TimeseriesControls'
 import TimeseriesPlot from '../timeseries/TimeseriesPlot'
 import { reconcileTimeseriesParams } from '../timeseries/timeseriesParams'
+import {
+  COORD_VAR_LABEL,
+  PLANE_AXIS,
+  createDefaultSectionParams,
+  midIndex,
+  sliceAxisSize,
+} from '../section/sectionDefaults'
 import { fetchDirectoryTimeseriesData, openDirectory } from '../../api/client'
 import { useDebounced } from '../../hooks/useDebounced'
 import { useDirectorySectionData } from '../../hooks/useRender'
 import type {
-  Dims,
   DirectoryMeta,
   DirectorySectionDataRequest,
   DirectoryTimeseriesResponse,
@@ -22,36 +28,7 @@ import type {
   TimeUnit,
 } from '../../types'
 
-const PLANE_AXIS: Record<Plane, keyof Dims> = { YZ: 'I', XZ: 'J', XY: 'K' }
-const COORD_VAR_LABEL: Record<keyof Dims, string> = { I: 'X', J: 'Y', K: 'Z' }
-
 type SubTab = 'section' | 'timeseries'
-
-function defaultVariable(variables: string[]): string {
-  return variables.find((v) => !['X', 'Y', 'Z'].includes(v)) ?? variables[0]
-}
-
-function midIndex(size: number): number {
-  return Math.max(0, Math.floor((size - 1) / 2))
-}
-
-function defaultSectionParams(meta: DirectoryMeta, plane: Plane): SectionParams {
-  const size = meta.plt_dims[PLANE_AXIS[plane]]
-  return {
-    plane,
-    sliceIndex: midIndex(size),
-    variable: defaultVariable(meta.plt_variables),
-    colormap: 'viridis',
-    customColormap: { enabled: false, low: '#1b4965', useMid: false, mid: '#2a9d8f', high: '#e76f51' },
-    fillLevels: 30,
-    lineLevels: 10,
-    showContourLines: true,
-    colorRange: { auto: true },
-    vectors: { show: true, skip: 2, width: 1.5, headWidth: 8 },
-    axis: { zlim: { auto: true }, aspect: { auto: true, ratio: 1 } },
-    exportScale: 2,
-  }
-}
 
 export default function DirectoryView() {
   const [meta, setMeta] = useState<DirectoryMeta | null>(null)
@@ -81,7 +58,7 @@ export default function DirectoryView() {
       setSubTab('section')
       setFramePosition(midIndex(newMeta.plt_frames.length))
       setFrameTimeUnit('sec')
-      setSectionParams(defaultSectionParams(newMeta, 'YZ'))
+      setSectionParams(createDefaultSectionParams(newMeta.plt_dims, newMeta.plt_variables, 'YZ'))
       const firstParam = newMeta.timeseries.params[0] ?? ''
       const firstPoint = newMeta.timeseries.by_param[firstParam]?.[0] ?? ''
       setTsParam(firstParam)
@@ -101,8 +78,7 @@ export default function DirectoryView() {
 
   function handlePlaneChange(plane: Plane) {
     if (!meta) return
-    const size = meta.plt_dims[PLANE_AXIS[plane]]
-    updateSectionParams({ plane, sliceIndex: midIndex(size) })
+    updateSectionParams({ plane, sliceIndex: midIndex(sliceAxisSize(meta.plt_dims, plane)) })
   }
 
   function updateTsParams(patch: Partial<TimeseriesParams>) {
@@ -172,7 +148,7 @@ export default function DirectoryView() {
     }
   }
 
-  const axisSize = meta && sectionParams ? meta.plt_dims[PLANE_AXIS[sectionParams.plane]] : 0
+  const axisSize = meta && sectionParams ? sliceAxisSize(meta.plt_dims, sectionParams.plane) : 0
   const datasetKey =
     meta && sectionParams && currentFrame
       ? `${meta.dir_id}-${sectionParams.plane}-${sectionParams.sliceIndex}-${sectionParams.variable}-${currentFrame.index}`

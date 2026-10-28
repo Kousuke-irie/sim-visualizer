@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import ControlGroup from '../common/ControlGroup'
 import { GridIcon, ImageIcon, LayersIcon } from '../common/icons'
 import RangeField from '../common/RangeField'
 import SliderNumberField from '../common/SliderNumberField'
@@ -8,18 +8,6 @@ type Props = {
   meta: Pick<DatMeta, 'depths' | 'variable'>
   params: TimeseriesParams
   onChange: (patch: Partial<TimeseriesParams>) => void
-}
-
-function ControlGroup({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
-  return (
-    <div className="control-group">
-      <div className="control-group__header">
-        {icon}
-        <span>{title}</span>
-      </div>
-      <div className="control-group__body">{children}</div>
-    </div>
-  )
 }
 
 export default function TimeseriesControls({ meta, params, onChange }: Props) {
