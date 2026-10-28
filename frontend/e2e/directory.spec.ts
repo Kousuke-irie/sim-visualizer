@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
-import { writeFileSync } from 'node:fs'
+import { mkdtempSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { E2E_DATA_ROOT } from './dataRoot'
 import { createSimulationDir } from './fixtures'
 
 test.describe('ディレクトリモード', () => {
@@ -53,9 +54,23 @@ test.describe('ディレクトリモード', () => {
   })
 
   test('input.dat の無いディレクトリはエラーを表示する', async ({ page }) => {
-    await page.getByPlaceholder('例: /data/mecamamo').fill('/')
+    await page.getByPlaceholder('例: /data/mecamamo').fill(mkdtempSync(join(E2E_DATA_ROOT, 'empty-')))
     await page.getByRole('button', { name: 'ディレクトリを開く' }).click()
     await expect(page.getByText(/input.dat が見つかりません/)).toBeVisible()
+  })
+
+  test('データルートの外は開けない', async ({ page }) => {
+    await page.getByPlaceholder('例: /data/mecamamo').fill('/')
+    await page.getByRole('button', { name: 'ディレクトリを開く' }).click()
+    await expect(page.getByText(/許可されたデータディレクトリの外/)).toBeVisible()
+  })
+
+  test('参照ダイアログはデータルートから始まり、それより上には戻れない', async ({ page }) => {
+    // 入力欄にパスがあるとそこから開くため、空にして既定の起点を確認する
+    await page.getByPlaceholder('例: /data/mecamamo').fill('')
+    await page.getByRole('button', { name: '参照…' }).click()
+    await expect(page.locator('.directory-browser__current')).toHaveText(E2E_DATA_ROOT)
+    await expect(page.getByRole('button', { name: '↑ 上へ' })).toBeDisabled()
   })
 
   test('時系列の初回取得に失敗してもエラーを表示し、別のパラメータに切り替えられる', async ({ page }) => {
