@@ -11,6 +11,7 @@ X, Y, Z はそれぞれ I, J, K のみに依存する矩形格子であること
 import numpy as np
 
 from app.config import MISSING_VALUE
+from app.errors import InvalidInputError
 from app.models.section import SectionDataRequest, SectionDataResponse
 from app.parsers.plt_parser import ParsedPlt
 
@@ -24,8 +25,8 @@ PLANE_CONFIG = {
 AXIS_COORD_VAR = {"I": "X", "J": "Y", "K": "Z"}
 
 
-class SectionDataError(ValueError):
-    pass
+class SectionDataError(InvalidInputError):
+    """指定した断面・変数が取り出せない（400）"""
 
 
 def _mask_missing(arr: np.ndarray) -> np.ma.MaskedArray:

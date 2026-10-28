@@ -11,6 +11,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from app.config import MISSING_VALUE, SESSION_TTL_SECONDS
+from app.errors import NotFoundError
 from app.models.common import Coords, DatGrid, DatMeta, Dims, PltMeta
 from app.parsers.dat_parser import ParsedDat
 from app.parsers.plt_parser import ParsedPlt
@@ -29,6 +30,9 @@ class DatEntry:
 
 # .plt はパース結果そのものを保持する。.dat はファイル名由来の変数名を添えて保持する
 Entry = ParsedPlt | DatEntry
+
+
+FILE_NOT_FOUND = "指定されたfile_idが見つかりません"
 
 
 class Store:
@@ -50,25 +54,31 @@ class Store:
         return self._build_dat_meta(self._entries.add(entry), entry)
 
     def get_plt(self, file_id: str) -> ParsedPlt:
-        entry = self._entries.get(file_id)
+        entry = self._get(file_id)
         if not isinstance(entry, ParsedPlt):
-            raise KeyError(file_id)
+            raise NotFoundError(FILE_NOT_FOUND)
         return entry
 
     def get_dat_entry(self, file_id: str) -> DatEntry:
-        entry = self._entries.get(file_id)
+        entry = self._get(file_id)
         if not isinstance(entry, DatEntry):
-            raise KeyError(file_id)
+            raise NotFoundError(FILE_NOT_FOUND)
         return entry
 
     def get_meta(self, file_id: str) -> PltMeta | DatMeta:
-        entry = self._entries.get(file_id)
+        entry = self._get(file_id)
         if isinstance(entry, ParsedPlt):
             return self._build_plt_meta(file_id, entry)
         return self._build_dat_meta(file_id, entry)
 
     def delete(self, file_id: str) -> None:
         self._entries.delete(file_id)
+
+    def _get(self, file_id: str) -> Entry:
+        try:
+            return self._entries.get(file_id)
+        except KeyError:
+            raise NotFoundError(FILE_NOT_FOUND) from None
 
     @staticmethod
     def _build_plt_meta(file_id: str, entry: ParsedPlt) -> PltMeta:

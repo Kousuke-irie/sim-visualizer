@@ -8,6 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from app.config import SESSION_TTL_SECONDS
+from app.errors import NotFoundError
 from app.models.common import Dims
 from app.models.directory import (
     DirectoryInputMeta,
@@ -67,7 +68,10 @@ class DirectoryStore:
         return self._build_meta(self._entries.add(entry), entry)
 
     def get(self, dir_id: str) -> DirectoryEntry:
-        return self._entries.get(dir_id)
+        try:
+            return self._entries.get(dir_id)
+        except KeyError:
+            raise NotFoundError("指定されたdir_idが見つかりません") from None
 
     def get_meta(self, dir_id: str) -> DirectoryMeta:
         return self._build_meta(dir_id, self.get(dir_id))

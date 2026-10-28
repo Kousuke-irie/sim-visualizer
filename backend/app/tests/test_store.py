@@ -1,6 +1,7 @@
 import pytest
 
 from app.config import SESSION_TTL_SECONDS
+from app.errors import NotFoundError
 from app.parsers.dat_parser import parse_dat_text
 from app.parsers.plt_parser import parse_plt_text
 from app.services.store import Store
@@ -25,9 +26,9 @@ def test_entries_are_typed_by_kind():
 
     assert store.get_plt(plt_id).variables[0] == "X"
     assert store.get_dat_entry(dat_id).variable == "DIC"
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         store.get_plt(dat_id)
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         store.get_dat_entry(plt_id)
 
 
@@ -35,7 +36,7 @@ def test_delete_removes_entry():
     store = Store()
     file_id = store.add_plt(parse_plt_text(make_plt_text())).file_id
     store.delete(file_id)
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         store.get_meta(file_id)
 
 
@@ -46,5 +47,5 @@ def test_expired_entries_are_dropped():
 
     now[0] += SESSION_TTL_SECONDS + 1
 
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFoundError):
         store.get_meta(old_id)
