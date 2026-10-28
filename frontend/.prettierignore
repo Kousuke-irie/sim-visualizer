@@ -3,3 +3,5 @@ node_modules
 package-lock.json
 playwright-report
 test-results
+src/types/api.gen.ts
+openapi.json

@@ -2,6 +2,7 @@ import type {
   DatMeta,
   DirectoryBrowseResponse,
   DirectoryMeta,
+  DirectoryOpenRequest,
   DirectorySectionDataRequest,
   DirectorySectionDataResponse,
   DirectoryTimeseriesRequest,
@@ -94,7 +95,7 @@ export async function openDirectory(path: string): Promise<DirectoryMeta> {
   const res = await fetch(`${BASE}/directory/open`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ path }),
+    body: JSON.stringify({ path } satisfies DirectoryOpenRequest),
   })
   if (!res.ok) {
     throw new Error(await safeErrorMessage(res, `ディレクトリを開けませんでした (${res.status})`))

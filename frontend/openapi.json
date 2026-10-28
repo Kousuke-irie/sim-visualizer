@@ -1,0 +1,1551 @@
+{
+  "components": {
+    "schemas": {
+      "Body_upload_file_api_upload_post": {
+        "properties": {
+          "file": {
+            "format": "binary",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_file_api_upload_post",
+        "type": "object"
+      },
+      "Coords": {
+        "properties": {
+          "X": {
+            "items": {
+              "type": "number"
+            },
+            "title": "X",
+            "type": "array"
+          },
+          "Y": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Y",
+            "type": "array"
+          },
+          "Z": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Z",
+            "type": "array"
+          }
+        },
+        "required": [
+          "X",
+          "Y",
+          "Z"
+        ],
+        "title": "Coords",
+        "type": "object"
+      },
+      "DatGrid": {
+        "properties": {
+          "h": {
+            "title": "H",
+            "type": "number"
+          },
+          "i": {
+            "title": "I",
+            "type": "integer"
+          },
+          "j": {
+            "title": "J",
+            "type": "integer"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "i",
+          "j",
+          "n",
+          "h"
+        ],
+        "title": "DatGrid",
+        "type": "object"
+      },
+      "DatMeta": {
+        "properties": {
+          "depth_values": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Depth Values",
+            "type": "array"
+          },
+          "depths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Depths",
+            "type": "array"
+          },
+          "file_id": {
+            "title": "File Id",
+            "type": "string"
+          },
+          "grid": {
+            "$ref": "#/components/schemas/DatGrid"
+          },
+          "kind": {
+            "const": "dat",
+            "default": "dat",
+            "enum": [
+              "dat"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "n_times": {
+            "title": "N Times",
+            "type": "integer"
+          },
+          "time_range": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Time Range",
+            "type": "array"
+          },
+          "variable": {
+            "title": "Variable",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file_id",
+          "kind",
+          "variable",
+          "grid",
+          "depths",
+          "depth_values",
+          "time_range",
+          "n_times"
+        ],
+        "title": "DatMeta",
+        "type": "object"
+      },
+      "Dims": {
+        "properties": {
+          "I": {
+            "title": "I",
+            "type": "integer"
+          },
+          "J": {
+            "title": "J",
+            "type": "integer"
+          },
+          "K": {
+            "title": "K",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "I",
+          "J",
+          "K"
+        ],
+        "title": "Dims",
+        "type": "object"
+      },
+      "DirectoryBrowseEntry": {
+        "properties": {
+          "has_input_dat": {
+            "title": "Has Input Dat",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "path",
+          "has_input_dat"
+        ],
+        "title": "DirectoryBrowseEntry",
+        "type": "object"
+      },
+      "DirectoryBrowseResponse": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/DirectoryBrowseEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "parent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "parent",
+          "entries"
+        ],
+        "title": "DirectoryBrowseResponse",
+        "type": "object"
+      },
+      "DirectoryInputMeta": {
+        "properties": {
+          "dt": {
+            "title": "Dt",
+            "type": "number"
+          },
+          "dx": {
+            "title": "Dx",
+            "type": "number"
+          },
+          "endtime": {
+            "title": "Endtime",
+            "type": "number"
+          },
+          "histout": {
+            "title": "Histout",
+            "type": "number"
+          },
+          "ifit2": {
+            "title": "Ifit2",
+            "type": "number"
+          },
+          "nhist": {
+            "title": "Nhist",
+            "type": "integer"
+          },
+          "result_dirs": {
+            "$ref": "#/components/schemas/ResultDirs"
+          },
+          "z_levels": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Z Levels",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ifit2",
+          "endtime",
+          "dt",
+          "dx",
+          "z_levels",
+          "nhist",
+          "histout",
+          "result_dirs"
+        ],
+        "title": "DirectoryInputMeta",
+        "type": "object"
+      },
+      "DirectoryMeta": {
+        "properties": {
+          "dir_id": {
+            "title": "Dir Id",
+            "type": "string"
+          },
+          "input": {
+            "$ref": "#/components/schemas/DirectoryInputMeta"
+          },
+          "plt_dims": {
+            "$ref": "#/components/schemas/Dims"
+          },
+          "plt_frames": {
+            "items": {
+              "$ref": "#/components/schemas/PltFrameMeta"
+            },
+            "title": "Plt Frames",
+            "type": "array"
+          },
+          "plt_variables": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Plt Variables",
+            "type": "array"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/HistPoint"
+            },
+            "title": "Points",
+            "type": "array"
+          },
+          "root": {
+            "title": "Root",
+            "type": "string"
+          },
+          "timeseries": {
+            "$ref": "#/components/schemas/TimeseriesIndex"
+          }
+        },
+        "required": [
+          "dir_id",
+          "root",
+          "input",
+          "points",
+          "plt_frames",
+          "timeseries",
+          "plt_variables",
+          "plt_dims"
+        ],
+        "title": "DirectoryMeta",
+        "type": "object"
+      },
+      "DirectoryOpenRequest": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "DirectoryOpenRequest",
+        "type": "object"
+      },
+      "DirectorySectionDataRequest": {
+        "properties": {
+          "dir_id": {
+            "title": "Dir Id",
+            "type": "string"
+          },
+          "frame_index": {
+            "title": "Frame Index",
+            "type": "integer"
+          },
+          "include_vectors": {
+            "default": true,
+            "title": "Include Vectors",
+            "type": "boolean"
+          },
+          "plane": {
+            "enum": [
+              "XY",
+              "XZ",
+              "YZ"
+            ],
+            "title": "Plane",
+            "type": "string"
+          },
+          "slice_index": {
+            "title": "Slice Index",
+            "type": "integer"
+          },
+          "variable": {
+            "title": "Variable",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dir_id",
+          "frame_index",
+          "plane",
+          "slice_index",
+          "variable"
+        ],
+        "title": "DirectorySectionDataRequest",
+        "type": "object"
+      },
+      "DirectorySectionDataResponse": {
+        "properties": {
+          "actual_coord": {
+            "title": "Actual Coord",
+            "type": "number"
+          },
+          "actual_index": {
+            "title": "Actual Index",
+            "type": "integer"
+          },
+          "frame_index": {
+            "title": "Frame Index",
+            "type": "integer"
+          },
+          "h_coords": {
+            "items": {
+              "type": "number"
+            },
+            "title": "H Coords",
+            "type": "array"
+          },
+          "h_label": {
+            "title": "H Label",
+            "type": "string"
+          },
+          "time_sec": {
+            "title": "Time Sec",
+            "type": "number"
+          },
+          "v_coords": {
+            "items": {
+              "type": "number"
+            },
+            "title": "V Coords",
+            "type": "array"
+          },
+          "v_label": {
+            "title": "V Label",
+            "type": "string"
+          },
+          "value_range": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Value Range",
+            "type": "array"
+          },
+          "values": {
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "title": "Values",
+            "type": "array"
+          },
+          "vector_h": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vector H"
+          },
+          "vector_h_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vector H Label"
+          },
+          "vector_v": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vector V"
+          },
+          "vector_v_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vector V Label"
+          }
+        },
+        "required": [
+          "h_coords",
+          "v_coords",
+          "h_label",
+          "v_label",
+          "values",
+          "vector_h",
+          "vector_v",
+          "vector_h_label",
+          "vector_v_label",
+          "actual_coord",
+          "actual_index",
+          "value_range",
+          "frame_index",
+          "time_sec"
+        ],
+        "title": "DirectorySectionDataResponse",
+        "type": "object"
+      },
+      "DirectoryTimeseriesRequest": {
+        "properties": {
+          "dir_id": {
+            "title": "Dir Id",
+            "type": "string"
+          },
+          "param": {
+            "title": "Param",
+            "type": "string"
+          },
+          "point": {
+            "title": "Point",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dir_id",
+          "param",
+          "point"
+        ],
+        "title": "DirectoryTimeseriesRequest",
+        "type": "object"
+      },
+      "DirectoryTimeseriesResponse": {
+        "properties": {
+          "depth_values": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Depth Values",
+            "type": "array"
+          },
+          "depths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Depths",
+            "type": "array"
+          },
+          "grid": {
+            "$ref": "#/components/schemas/DatGrid"
+          },
+          "point": {
+            "title": "Point",
+            "type": "string"
+          },
+          "times": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Times",
+            "type": "array"
+          },
+          "values": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "title": "Values",
+            "type": "array"
+          },
+          "variable": {
+            "title": "Variable",
+            "type": "string"
+          }
+        },
+        "required": [
+          "variable",
+          "point",
+          "grid",
+          "depths",
+          "depth_values",
+          "times",
+          "values"
+        ],
+        "title": "DirectoryTimeseriesResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HistPoint": {
+        "properties": {
+          "i": {
+            "title": "I",
+            "type": "integer"
+          },
+          "j": {
+            "title": "J",
+            "type": "integer"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "point": {
+            "title": "Point",
+            "type": "string"
+          },
+          "x": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "X"
+          },
+          "y": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Y"
+          }
+        },
+        "required": [
+          "point",
+          "i",
+          "j",
+          "n",
+          "x",
+          "y"
+        ],
+        "title": "HistPoint",
+        "type": "object"
+      },
+      "PltFrameMeta": {
+        "properties": {
+          "file": {
+            "title": "File",
+            "type": "string"
+          },
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "time_sec": {
+            "title": "Time Sec",
+            "type": "number"
+          }
+        },
+        "required": [
+          "file",
+          "index",
+          "time_sec"
+        ],
+        "title": "PltFrameMeta",
+        "type": "object"
+      },
+      "PltMeta": {
+        "properties": {
+          "coords": {
+            "$ref": "#/components/schemas/Coords"
+          },
+          "dims": {
+            "$ref": "#/components/schemas/Dims"
+          },
+          "file_id": {
+            "title": "File Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "plt",
+            "default": "plt",
+            "enum": [
+              "plt"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "value_ranges": {
+            "additionalProperties": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Value Ranges",
+            "type": "object"
+          },
+          "variables": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Variables",
+            "type": "array"
+          }
+        },
+        "required": [
+          "file_id",
+          "kind",
+          "variables",
+          "dims",
+          "coords",
+          "value_ranges"
+        ],
+        "title": "PltMeta",
+        "type": "object"
+      },
+      "ResultDirs": {
+        "properties": {
+          "field1": {
+            "title": "Field1",
+            "type": "string"
+          },
+          "field2": {
+            "title": "Field2",
+            "type": "string"
+          },
+          "hist": {
+            "title": "Hist",
+            "type": "string"
+          }
+        },
+        "required": [
+          "hist",
+          "field1",
+          "field2"
+        ],
+        "title": "ResultDirs",
+        "type": "object"
+      },
+      "SectionDataRequest": {
+        "properties": {
+          "file_id": {
+            "title": "File Id",
+            "type": "string"
+          },
+          "include_vectors": {
+            "default": true,
+            "title": "Include Vectors",
+            "type": "boolean"
+          },
+          "plane": {
+            "enum": [
+              "XY",
+              "XZ",
+              "YZ"
+            ],
+            "title": "Plane",
+            "type": "string"
+          },
+          "slice_index": {
+            "title": "Slice Index",
+            "type": "integer"
+          },
+          "variable": {
+            "title": "Variable",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file_id",
+          "plane",
+          "slice_index",
+          "variable"
+        ],
+        "title": "SectionDataRequest",
+        "type": "object"
+      },
+      "SectionDataResponse": {
+        "properties": {
+          "actual_coord": {
+            "title": "Actual Coord",
+            "type": "number"
+          },
+          "actual_index": {
+            "title": "Actual Index",
+            "type": "integer"
+          },
+          "h_coords": {
+            "items": {
+              "type": "number"
+            },
+            "title": "H Coords",
+            "type": "array"
+          },
+          "h_label": {
+            "title": "H Label",
+            "type": "string"
+          },
+          "v_coords": {
+            "items": {
+              "type": "number"
+            },
+            "title": "V Coords",
+            "type": "array"
+          },
+          "v_label": {
+            "title": "V Label",
+            "type": "string"
+          },
+          "value_range": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Value Range",
+            "type": "array"
+          },
+          "values": {
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "title": "Values",
+            "type": "array"
+          },
+          "vector_h": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vector H"
+          },
+          "vector_h_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vector H Label"
+          },
+          "vector_v": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vector V"
+          },
+          "vector_v_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vector V Label"
+          }
+        },
+        "required": [
+          "h_coords",
+          "v_coords",
+          "h_label",
+          "v_label",
+          "values",
+          "vector_h",
+          "vector_v",
+          "vector_h_label",
+          "vector_v_label",
+          "actual_coord",
+          "actual_index",
+          "value_range"
+        ],
+        "title": "SectionDataResponse",
+        "type": "object"
+      },
+      "TimeseriesDataResponse": {
+        "properties": {
+          "times": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Times",
+            "type": "array"
+          },
+          "values": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "times",
+          "values"
+        ],
+        "title": "TimeseriesDataResponse",
+        "type": "object"
+      },
+      "TimeseriesIndex": {
+        "properties": {
+          "by_param": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "By Param",
+            "type": "object"
+          },
+          "params": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Params",
+            "type": "array"
+          }
+        },
+        "required": [
+          "params",
+          "by_param"
+        ],
+        "title": "TimeseriesIndex",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Sim Visualizer API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/directory/browse": {
+      "get": {
+        "operationId": "browse_directory_api_directory_browse_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DirectoryBrowseResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Browse Directory",
+        "tags": [
+          "directory"
+        ]
+      }
+    },
+    "/api/directory/open": {
+      "post": {
+        "operationId": "open_directory_api_directory_open_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectoryOpenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DirectoryMeta"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Open Directory",
+        "tags": [
+          "directory"
+        ]
+      }
+    },
+    "/api/directory/section/data": {
+      "post": {
+        "operationId": "get_directory_section_data_api_directory_section_data_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectorySectionDataRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DirectorySectionDataResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Directory Section Data",
+        "tags": [
+          "directory"
+        ]
+      }
+    },
+    "/api/directory/timeseries/data": {
+      "post": {
+        "operationId": "get_directory_timeseries_data_api_directory_timeseries_data_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectoryTimeseriesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DirectoryTimeseriesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Directory Timeseries Data",
+        "tags": [
+          "directory"
+        ]
+      }
+    },
+    "/api/directory/{dir_id}/meta": {
+      "get": {
+        "operationId": "get_directory_meta_api_directory__dir_id__meta_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dir_id",
+            "required": true,
+            "schema": {
+              "title": "Dir Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DirectoryMeta"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Directory Meta",
+        "tags": [
+          "directory"
+        ]
+      }
+    },
+    "/api/file/{file_id}": {
+      "delete": {
+        "operationId": "delete_file_api_file__file_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "file_id",
+            "required": true,
+            "schema": {
+              "title": "File Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Delete File Api File  File Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete File",
+        "tags": [
+          "upload"
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Health Api Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health"
+      }
+    },
+    "/api/meta/{file_id}": {
+      "get": {
+        "operationId": "get_meta_api_meta__file_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "file_id",
+            "required": true,
+            "schema": {
+              "title": "File Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "mapping": {
+                      "dat": "#/components/schemas/DatMeta",
+                      "plt": "#/components/schemas/PltMeta"
+                    },
+                    "propertyName": "kind"
+                  },
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/PltMeta"
+                    },
+                    {
+                      "$ref": "#/components/schemas/DatMeta"
+                    }
+                  ],
+                  "title": "Response Get Meta Api Meta  File Id  Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Meta",
+        "tags": [
+          "upload"
+        ]
+      }
+    },
+    "/api/section/data": {
+      "post": {
+        "operationId": "get_section_data_api_section_data_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SectionDataRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectionDataResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Section Data",
+        "tags": [
+          "section"
+        ]
+      }
+    },
+    "/api/timeseries/data/{file_id}": {
+      "get": {
+        "operationId": "get_timeseries_data_api_timeseries_data__file_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "file_id",
+            "required": true,
+            "schema": {
+              "title": "File Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimeseriesDataResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Timeseries Data",
+        "tags": [
+          "timeseries"
+        ]
+      }
+    },
+    "/api/upload": {
+      "post": {
+        "operationId": "upload_file_api_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_file_api_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "mapping": {
+                      "dat": "#/components/schemas/DatMeta",
+                      "plt": "#/components/schemas/PltMeta"
+                    },
+                    "propertyName": "kind"
+                  },
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/PltMeta"
+                    },
+                    {
+                      "$ref": "#/components/schemas/DatMeta"
+                    }
+                  ],
+                  "title": "Response Upload File Api Upload Post"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload File",
+        "tags": [
+          "upload"
+        ]
+      }
+    }
+  }
+}

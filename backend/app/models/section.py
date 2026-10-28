@@ -1,9 +1,9 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from app.models.base import ApiModel
 
 
-class SectionDataRequest(BaseModel):
+class SectionDataRequest(ApiModel):
     file_id: str
     plane: Literal["XY", "XZ", "YZ"]
     slice_index: int
@@ -11,7 +11,7 @@ class SectionDataRequest(BaseModel):
     include_vectors: bool = True
 
 
-class SectionDataResponse(BaseModel):
+class SectionDataResponse(ApiModel):
     h_coords: list[float]
     v_coords: list[float]
     h_label: str
@@ -23,4 +23,4 @@ class SectionDataResponse(BaseModel):
     vector_v_label: str | None = None
     actual_coord: float
     actual_index: int
-    value_range: list[float]
+    value_range: tuple[float, float]  # 欠損を除いた (min, max)

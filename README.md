@@ -59,6 +59,9 @@ npx playwright install chromium
 PYTHON=../backend/.venv/bin/python npm run e2e   # backend と Vite を自動起動する
 ```
 
+API の TypeScript 型は Pydantic モデルから自動生成しています（`backend/scripts/export_openapi.py` → `npm run gen:api`）。
+モデルを変えて再生成を忘れると、CI の「API types up to date」ジョブが失敗します。
+
 テスト用データは実データと同じ形式の合成データを [`backend/app/tests/sample_data.py`](backend/app/tests/sample_data.py) で生成します
 （研究データそのものはリポジトリに含めていません）。
 

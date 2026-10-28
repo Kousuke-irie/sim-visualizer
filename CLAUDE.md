@@ -45,7 +45,7 @@
 ```bash
 # backend
 cd backend
-.venv/bin/ruff check app && .venv/bin/ruff format --check app
+.venv/bin/ruff check app scripts && .venv/bin/ruff format --check app scripts
 .venv/bin/pytest
 
 # frontend
@@ -67,7 +67,7 @@ PYTHON="$PWD/../backend/.venv/bin/python" npm run e2e
 | パーサ | `backend/app/parsers/` | 外部ファイル形式の解釈のみ。FastAPI に依存しない。専用の例外を投げる |
 | サービス | `backend/app/services/` | NumPy による抽出・キャッシュ・ストア。HTTP を知らない |
 | ルーター | `backend/app/routers/` | 入出力の検証と例外 → HTTP ステータスの変換だけを行う |
-| モデル | `backend/app/models/` | Pydantic スキーマ。変更したら `frontend/src/types/index.ts` も揃える |
+| モデル | `backend/app/models/` | Pydantic スキーマ（`ApiModel` を継承）。変更したら `python scripts/export_openapi.py` → `npm run gen:api` で TS 型を再生成してコミットする（CI が鮮度を検査）。`api.gen.ts` は手で編集しない |
 | 描画ロジック | `frontend/src/components/**/*Figure.ts` など | React に依存しない純粋関数にして Vitest でテストする |
 | コンポーネント | `frontend/src/components/` | 状態管理と表示のみ。計算はロジック側に寄せる |
 | テスト | `backend/app/tests/`、`frontend/src/**/*.test.ts`、`frontend/e2e/` | 合成データは `sample_data.py` に集約する |

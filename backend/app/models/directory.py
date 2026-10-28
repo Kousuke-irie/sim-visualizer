@@ -1,18 +1,17 @@
 from typing import Literal
 
-from pydantic import BaseModel
-
+from app.models.base import ApiModel
 from app.models.common import DatGrid, Dims
 from app.models.section import SectionDataResponse
 
 
-class ResultDirs(BaseModel):
+class ResultDirs(ApiModel):
     hist: str
     field1: str
     field2: str
 
 
-class DirectoryInputMeta(BaseModel):
+class DirectoryInputMeta(ApiModel):
     ifit2: float
     endtime: float
     dt: float
@@ -23,7 +22,7 @@ class DirectoryInputMeta(BaseModel):
     result_dirs: ResultDirs
 
 
-class HistPoint(BaseModel):
+class HistPoint(ApiModel):
     point: str
     i: int
     j: int
@@ -32,18 +31,18 @@ class HistPoint(BaseModel):
     y: float | None = None
 
 
-class PltFrameMeta(BaseModel):
+class PltFrameMeta(ApiModel):
     file: str
     index: int
     time_sec: float
 
 
-class TimeseriesIndex(BaseModel):
+class TimeseriesIndex(ApiModel):
     params: list[str]
     by_param: dict[str, list[str]]
 
 
-class DirectoryMeta(BaseModel):
+class DirectoryMeta(ApiModel):
     dir_id: str
     root: str
     input: DirectoryInputMeta
@@ -54,23 +53,23 @@ class DirectoryMeta(BaseModel):
     plt_dims: Dims
 
 
-class DirectoryOpenRequest(BaseModel):
+class DirectoryOpenRequest(ApiModel):
     path: str
 
 
-class DirectoryBrowseEntry(BaseModel):
+class DirectoryBrowseEntry(ApiModel):
     name: str
     path: str
     has_input_dat: bool
 
 
-class DirectoryBrowseResponse(BaseModel):
+class DirectoryBrowseResponse(ApiModel):
     path: str
     parent: str | None = None
     entries: list[DirectoryBrowseEntry]
 
 
-class DirectorySectionDataRequest(BaseModel):
+class DirectorySectionDataRequest(ApiModel):
     dir_id: str
     frame_index: int
     plane: Literal["XY", "XZ", "YZ"]
@@ -84,13 +83,13 @@ class DirectorySectionDataResponse(SectionDataResponse):
     time_sec: float
 
 
-class DirectoryTimeseriesRequest(BaseModel):
+class DirectoryTimeseriesRequest(ApiModel):
     dir_id: str
     param: str
     point: str
 
 
-class DirectoryTimeseriesResponse(BaseModel):
+class DirectoryTimeseriesResponse(ApiModel):
     variable: str
     point: str
     grid: DatGrid
