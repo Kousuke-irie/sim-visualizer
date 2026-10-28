@@ -40,6 +40,7 @@ http://localhost:5173 を開きます。`DATA_DIR` はコンテナ内の `/data`
 |---|---|---|
 | Lint / Format | backend | `ruff check app && ruff format --check app` |
 | 単体・API テスト | backend（pytest） | `pytest --cov=app` |
+| Lint / Format | frontend（ESLint + Prettier） | `npm run lint && npm run format:check` |
 | 型検査 | frontend | `npm run typecheck` |
 | 単体テスト | frontend（Vitest） | `npm test` |
 | E2E | 実サーバー＋ブラウザ（Playwright） | `npm run e2e` |
@@ -65,4 +66,4 @@ CI（GitHub Actions）では push / PR ごとに backend・frontend・E2E・Dock
 
 ## 技術スタック
 
-FastAPI / NumPy / Pydantic / React 18 / TypeScript / Vite / Plotly.js / Docker Compose / pytest / Vitest / Playwright / GitHub Actions
+FastAPI / NumPy / Pydantic / React 18 / TypeScript / Vite / Plotly.js / Docker Compose / pytest / ruff / Vitest / Playwright / ESLint / Prettier / GitHub Actions
