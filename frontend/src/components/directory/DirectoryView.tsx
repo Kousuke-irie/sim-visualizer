@@ -113,18 +113,24 @@ export default function DirectoryView() {
 
   // データ取得（サーバー往復）が必要なのは平面・スライス位置・変数・フレームが変わったときだけ。
   // 色・レベル数などのスタイル変更は SectionPlot 側でクライアントのみ即時反映される（DESIGN.md 7-1節の方針を踏襲）。
+  // 依存配列を「通信に関わる値」だけに絞るため、先にプリミティブとして取り出しておく
+  const dirId = meta?.dir_id
+  const frameIndex = currentFrame?.index
+  const plane = sectionParams?.plane
+  const sliceIndex = sectionParams?.sliceIndex
+  const variable = sectionParams?.variable
   const sectionDataRequest = useMemo<DirectorySectionDataRequest | null>(() => {
-    if (!meta || !sectionParams || !currentFrame) return null
-    return {
-      dir_id: meta.dir_id,
-      frame_index: currentFrame.index,
-      plane: sectionParams.plane,
-      slice_index: sectionParams.sliceIndex,
-      variable: sectionParams.variable,
-      include_vectors: true,
+    if (
+      dirId === undefined ||
+      frameIndex === undefined ||
+      plane === undefined ||
+      sliceIndex === undefined ||
+      variable === undefined
+    ) {
+      return null
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meta?.dir_id, sectionParams?.plane, sectionParams?.sliceIndex, sectionParams?.variable, currentFrame?.index])
+    return { dir_id: dirId, frame_index: frameIndex, plane, slice_index: sliceIndex, variable, include_vectors: true }
+  }, [dirId, frameIndex, plane, sliceIndex, variable])
 
   const debouncedSectionRequest = useDebounced(sectionDataRequest, 150)
   const {
@@ -134,11 +140,11 @@ export default function DirectoryView() {
   } = useDirectorySectionData(debouncedSectionRequest)
 
   useEffect(() => {
-    if (!meta || !tsParam || !tsPoint) return
+    if (!dirId || !tsParam || !tsPoint) return
     let cancelled = false
     setTsLoading(true)
     setTsError(null)
-    fetchDirectoryTimeseriesData({ dir_id: meta.dir_id, param: tsParam, point: tsPoint })
+    fetchDirectoryTimeseriesData({ dir_id: dirId, param: tsParam, point: tsPoint })
       .then((res) => {
         if (cancelled) return
         setTsData(res)
@@ -153,8 +159,7 @@ export default function DirectoryView() {
     return () => {
       cancelled = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meta?.dir_id, tsParam, tsPoint])
+  }, [dirId, tsParam, tsPoint])
 
   function handlePointParamChange(patch: { param?: string; point?: string }) {
     if (!meta) return

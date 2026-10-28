@@ -25,8 +25,7 @@ export default function TimeSlider({ frames, position, onPositionChange, timeUni
       onPositionChange(next)
     }, PLAYBACK_INTERVAL_MS)
     return () => clearInterval(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing, frames.length])
+  }, [playing, frames.length, onPositionChange])
 
   useEffect(() => {
     setPlaying(false)

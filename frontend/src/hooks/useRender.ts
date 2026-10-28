@@ -36,6 +36,8 @@ export function useSectionData(request: SectionDataRequest | null): SectionDataS
           setState((prev) => ({ ...prev, loading: false, error: err.message }))
         }
       })
+    // request は呼び出し側で毎回作り直されうるオブジェクトなので、内容（key）が変わったときだけ取り直す。
+    // key は request から作っているため、request を依存に入れなくても古い値を読むことはない
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 
@@ -70,6 +72,8 @@ export function useDirectorySectionData(request: DirectorySectionDataRequest | n
           setState((prev) => ({ ...prev, loading: false, error: err.message }))
         }
       })
+    // request は呼び出し側で毎回作り直されうるオブジェクトなので、内容（key）が変わったときだけ取り直す。
+    // key は request から作っているため、request を依存に入れなくても古い値を読むことはない
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 
