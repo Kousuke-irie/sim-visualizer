@@ -70,16 +70,15 @@ export default function SectionView() {
   // データ取得（サーバー往復）が必要なのは平面・スライス位置・変数が変わったときだけ。
   // 色・レベル数・ラベル・ベクトル見た目などのスタイル変更はここに影響せず、
   // SectionPlot 側でクライアントのみで即時反映される。
+  // 依存配列を「通信に関わる値」だけに絞るため、先にプリミティブとして取り出しておく
+  const fileId = meta?.file_id
+  const plane = params?.plane
+  const sliceIndex = params?.sliceIndex
+  const variable = params?.variable
   const dataRequest = useMemo<SectionDataRequest | null>(() => {
-    if (!meta || !params) return null
-    return {
-      file_id: meta.file_id,
-      plane: params.plane,
-      slice_index: params.sliceIndex,
-      variable: params.variable,
-      include_vectors: true,
-    }
-  }, [meta, params?.plane, params?.sliceIndex, params?.variable])
+    if (fileId === undefined || plane === undefined || sliceIndex === undefined || variable === undefined) return null
+    return { file_id: fileId, plane, slice_index: sliceIndex, variable, include_vectors: true }
+  }, [fileId, plane, sliceIndex, variable])
 
   const debouncedRequest = useDebounced(dataRequest, 150)
   const { data, loading, error: dataError } = useSectionData(debouncedRequest)

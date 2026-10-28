@@ -36,6 +36,7 @@
 - **バグ修正には回帰テストを付ける。** 再現するテストを先に書き、失敗することを確かめてから直す。
 - **計測してから最適化する。** パフォーマンス改善は、変更前後のベンチマーク値をコミットメッセージか PR に残す。
 - **設計を変えたら DESIGN.md も同じ PR で更新する。** 判断の理由（なぜそうしたか、何を捨てたか）も書く。
+- 書式は Prettier（frontend）と ruff format（backend）に任せ、手で整えない。`eslint-disable` は理由をコメントに書ける場合だけ使う。
 - ファイル内の既存のスタイル（命名、日本語コメントの密度、イディオム）に合わせる。
   コメントには「何をしているか」ではなく「なぜそうしているか」を書く。
 
@@ -49,7 +50,7 @@ cd backend
 
 # frontend
 cd frontend
-npm run typecheck && npm test && npm run build
+npm run lint && npm run format:check && npm run typecheck && npm test && npm run build
 
 # UI や API に触れた場合は E2E も
 PYTHON="$PWD/../backend/.venv/bin/python" npm run e2e

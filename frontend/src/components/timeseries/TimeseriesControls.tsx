@@ -24,9 +24,7 @@ function ControlGroup({ icon, title, children }: { icon: ReactNode; title: strin
 
 export default function TimeseriesControls({ meta, params, onChange }: Props) {
   function toggleDepth(depth: string, checked: boolean) {
-    const next = checked
-      ? [...params.selectedDepths, depth]
-      : params.selectedDepths.filter((d) => d !== depth)
+    const next = checked ? [...params.selectedDepths, depth] : params.selectedDepths.filter((d) => d !== depth)
     onChange({ selectedDepths: meta.depths.filter((d) => next.includes(d)) })
   }
 

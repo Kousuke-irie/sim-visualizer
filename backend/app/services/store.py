@@ -7,7 +7,6 @@
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Dict, List, Union
 
 import numpy as np
 
@@ -19,8 +18,8 @@ from app.parsers.plt_parser import ParsedPlt
 
 @dataclass
 class PltEntry:
-    variables: List[str]
-    dims: Dict[str, int]
+    variables: list[str]
+    dims: dict[str, int]
     grid: np.ndarray  # shape (K, J, I, nvar)
     last_access: float = field(default_factory=time.time)
 
@@ -28,20 +27,20 @@ class PltEntry:
 @dataclass
 class DatEntry:
     variable: str
-    grid: Dict[str, float]  # {"i": .., "j": .., "n": .., "h": ..}
-    depths: List[str]
-    depth_values: List[float]
+    grid: dict[str, float]  # {"i": .., "j": .., "n": .., "h": ..}
+    depths: list[str]
+    depth_values: list[float]
     times: np.ndarray  # shape (n_times,)
     values: np.ndarray  # shape (n_times, n_depths)
     last_access: float = field(default_factory=time.time)
 
 
-Entry = Union[PltEntry, DatEntry]
+Entry = PltEntry | DatEntry
 
 
 class Store:
     def __init__(self) -> None:
-        self._entries: Dict[str, Entry] = {}
+        self._entries: dict[str, Entry] = {}
 
     def add_plt(self, parsed: ParsedPlt) -> PltMeta:
         self._purge_expired()
@@ -78,7 +77,7 @@ class Store:
         entry.last_access = time.time()
         return entry
 
-    def get_meta(self, file_id: str) -> Union[PltMeta, DatMeta]:
+    def get_meta(self, file_id: str) -> PltMeta | DatMeta:
         entry = self._entries.get(file_id)
         if entry is None:
             raise KeyError(file_id)
@@ -105,7 +104,7 @@ class Store:
         y_coords = grid[0, :, 0, idx_var["Y"]].astype(float).tolist()
         z_coords = grid[:, 0, 0, idx_var["Z"]].astype(float).tolist()
 
-        value_ranges: Dict[str, List[float]] = {}
+        value_ranges: dict[str, list[float]] = {}
         for name, i in idx_var.items():
             col = grid[..., i].astype(float)
             valid = col[~np.isclose(col, MISSING_VALUE)]

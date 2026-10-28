@@ -26,5 +26,8 @@ export function recordApiRequests(page: Page): Request[] {
 
 // Plotly が描画中の図のトレース（div.js-plotly-plot に付与される data プロパティ）を読む
 export async function plotTraces(page: Page): Promise<Record<string, unknown>[]> {
-  return page.locator('.js-plotly-plot').first().evaluate((el) => (el as unknown as { data: Record<string, unknown>[] }).data)
+  return page
+    .locator('.js-plotly-plot')
+    .first()
+    .evaluate((el) => (el as unknown as { data: Record<string, unknown>[] }).data)
 }

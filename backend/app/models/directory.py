@@ -1,4 +1,4 @@
-from typing import Dict, List, Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -17,7 +17,7 @@ class DirectoryInputMeta(BaseModel):
     endtime: float
     dt: float
     dx: float
-    z_levels: List[float]
+    z_levels: list[float]
     nhist: int
     histout: float
     result_dirs: ResultDirs
@@ -28,8 +28,8 @@ class HistPoint(BaseModel):
     i: int
     j: int
     n: int
-    x: Optional[float] = None
-    y: Optional[float] = None
+    x: float | None = None
+    y: float | None = None
 
 
 class PltFrameMeta(BaseModel):
@@ -39,18 +39,18 @@ class PltFrameMeta(BaseModel):
 
 
 class TimeseriesIndex(BaseModel):
-    params: List[str]
-    by_param: Dict[str, List[str]]
+    params: list[str]
+    by_param: dict[str, list[str]]
 
 
 class DirectoryMeta(BaseModel):
     dir_id: str
     root: str
     input: DirectoryInputMeta
-    points: List[HistPoint]
-    plt_frames: List[PltFrameMeta]
+    points: list[HistPoint]
+    plt_frames: list[PltFrameMeta]
     timeseries: TimeseriesIndex
-    plt_variables: List[str]
+    plt_variables: list[str]
     plt_dims: Dims
 
 
@@ -66,8 +66,8 @@ class DirectoryBrowseEntry(BaseModel):
 
 class DirectoryBrowseResponse(BaseModel):
     path: str
-    parent: Optional[str] = None
-    entries: List[DirectoryBrowseEntry]
+    parent: str | None = None
+    entries: list[DirectoryBrowseEntry]
 
 
 class DirectorySectionDataRequest(BaseModel):
@@ -94,7 +94,7 @@ class DirectoryTimeseriesResponse(BaseModel):
     variable: str
     point: str
     grid: DatGrid
-    depths: List[str]
-    depth_values: List[float]
-    times: List[float]
-    values: List[List[float]]
+    depths: list[str]
+    depth_values: list[float]
+    times: list[float]
+    values: list[list[float]]

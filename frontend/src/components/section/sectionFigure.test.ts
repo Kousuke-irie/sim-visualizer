@@ -158,7 +158,9 @@ describe('computeAspectRatio（Plotly の scaleratio への変換）', () => {
 
 describe('buildVectorTraces', () => {
   it('非表示やベクトル無しなら null', () => {
-    expect(buildVectorTraces(makeData(), makeParams({ vectors: { show: false, skip: 1, width: 1, headWidth: 8 } }), 100)).toBeNull()
+    expect(
+      buildVectorTraces(makeData(), makeParams({ vectors: { show: false, skip: 1, width: 1, headWidth: 8 } }), 100),
+    ).toBeNull()
     expect(buildVectorTraces(makeData({ vector_h: null, vector_v: null }), makeParams(), 100)).toBeNull()
   })
 

@@ -6,7 +6,6 @@
 import os
 import re
 from dataclasses import dataclass
-from typing import Dict, List
 
 PLT_FRAME_RE = re.compile(r"^tec-(\d+)\.plt$")
 HIST_FILE_RE = re.compile(r"^(?P<param>[A-Za-z0-9]+)-0*(?P<point>\d+)\.dat$")
@@ -28,8 +27,8 @@ class PltFrameRaw:
 
 @dataclass
 class TimeseriesIndexRaw:
-    params: List[str]
-    by_param: Dict[str, List[str]]
+    params: list[str]
+    by_param: dict[str, list[str]]
 
 
 def contains_input_dat(
@@ -58,8 +57,8 @@ def contains_input_dat(
     return False
 
 
-def scan_plt_frames(field2_dir: str, ifit2: float) -> List[PltFrameRaw]:
-    frames: List[PltFrameRaw] = []
+def scan_plt_frames(field2_dir: str, ifit2: float) -> list[PltFrameRaw]:
+    frames: list[PltFrameRaw] = []
     for name in os.listdir(field2_dir):
         m = PLT_FRAME_RE.match(name)
         if not m:
@@ -71,7 +70,7 @@ def scan_plt_frames(field2_dir: str, ifit2: float) -> List[PltFrameRaw]:
 
 
 def scan_hist_files(hist_dir: str) -> TimeseriesIndexRaw:
-    by_param: Dict[str, List[str]] = {}
+    by_param: dict[str, list[str]] = {}
     for name in os.listdir(hist_dir):
         m = HIST_FILE_RE.match(name)
         if not m:

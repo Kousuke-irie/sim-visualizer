@@ -9,4 +9,5 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# 開発用の --reload は docker-compose.yml の command で付ける。インメモリストアのため worker は増やさない
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

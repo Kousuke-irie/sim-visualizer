@@ -6,7 +6,6 @@ TITLE / VARIABLES / ZONE ヘッダを自動パースし、変数名・格子寸�
 
 import re
 from dataclasses import dataclass
-from typing import Dict, List
 
 import numpy as np
 
@@ -19,15 +18,15 @@ class PltParseError(ValueError):
 
 @dataclass
 class ParsedPlt:
-    variables: List[str]
-    dims: Dict[str, int]
+    variables: list[str]
+    dims: dict[str, int]
     grid: np.ndarray  # shape (K, J, I, nvar)
 
 
 def parse_plt_text(text: str) -> ParsedPlt:
-    variables: List[str] = None
-    dims: Dict[str, int] = {}
-    data_lines: List[str] = []
+    variables: list[str] | None = None
+    dims: dict[str, int] = {}
+    data_lines: list[str] = []
 
     for raw_line in text.splitlines():
         line = raw_line.strip()

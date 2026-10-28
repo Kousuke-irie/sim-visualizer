@@ -20,17 +20,13 @@ export default function RangeField({ label, value, onChange }: Props) {
             type="number"
             placeholder="min"
             value={value.min ?? ''}
-            onChange={(e) =>
-              onChange({ ...value, min: e.target.value === '' ? undefined : Number(e.target.value) })
-            }
+            onChange={(e) => onChange({ ...value, min: e.target.value === '' ? undefined : Number(e.target.value) })}
           />
           <input
             type="number"
             placeholder="max"
             value={value.max ?? ''}
-            onChange={(e) =>
-              onChange({ ...value, max: e.target.value === '' ? undefined : Number(e.target.value) })
-            }
+            onChange={(e) => onChange({ ...value, max: e.target.value === '' ? undefined : Number(e.target.value) })}
           />
         </div>
       )}

@@ -1,8 +1,6 @@
-from typing import List
-
 from pydantic import BaseModel
 
 
 class TimeseriesDataResponse(BaseModel):
-    times: List[float]  # 秒
-    values: List[List[float]]  # shape (n_times, n_depths)
+    times: list[float]  # 秒
+    values: list[list[float]]  # shape (n_times, n_depths)

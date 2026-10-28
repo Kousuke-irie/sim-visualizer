@@ -66,7 +66,11 @@ export function computeVRange(data: SectionDataResponse, params: SectionParams):
 // 画面上に実際に表示される縦横比（desiredAspect）そのものではない。
 // desiredAspect = rawAspect(データの縦横比) * scaleratio という関係になるため、
 // scaleratio = desiredAspect / rawAspect を返す必要がある。
-export function computeAspectRatio(data: SectionDataResponse, params: SectionParams, vRange?: [number, number]): number {
+export function computeAspectRatio(
+  data: SectionDataResponse,
+  params: SectionParams,
+  vRange?: [number, number],
+): number {
   const hExtent = Math.max(...data.h_coords) - Math.min(...data.h_coords) || 1
   const [vLo, vHi] = vRange ?? [Math.min(...data.v_coords), Math.max(...data.v_coords)]
   const vExtent = Math.max(vHi - vLo, 1e-6)
@@ -105,11 +109,7 @@ export function buildVectorTraces(
 
   const maxMag = points.reduce((m, p) => Math.max(m, Math.hypot(p.u, p.w)), 0)
   const lengthPerUnit =
-    params.vectors.scale && params.vectors.scale > 0
-      ? params.vectors.scale
-      : maxMag > 0
-        ? (0.08 * hExtent) / maxMag
-        : 1
+    params.vectors.scale && params.vectors.scale > 0 ? params.vectors.scale : maxMag > 0 ? (0.08 * hExtent) / maxMag : 1
 
   const shaftX: (number | null)[] = []
   const shaftY: (number | null)[] = []
