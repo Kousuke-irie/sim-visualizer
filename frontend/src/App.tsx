@@ -46,10 +46,18 @@ export default function App() {
           </label>
         </div>
       </header>
+      {/* タブを切り替えてもアップロードしたファイルや設定を失わないよう、非表示のビューもアンマウントせず hidden で隠す。
+          Plotly の図は再表示時に PlotlyChart の ResizeObserver が大きさを合わせ直す */}
       <main className="app__main">
-        {tab === 'section' && <SectionView />}
-        {tab === 'timeseries' && <TimeseriesView />}
-        {tab === 'directory' && <DirectoryView />}
+        <div hidden={tab !== 'section'}>
+          <SectionView />
+        </div>
+        <div hidden={tab !== 'timeseries'}>
+          <TimeseriesView />
+        </div>
+        <div hidden={tab !== 'directory'}>
+          <DirectoryView />
+        </div>
       </main>
     </div>
   )
