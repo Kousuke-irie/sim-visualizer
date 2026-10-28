@@ -6,7 +6,6 @@ input.dat のパース結果・field2/hist の走査結果を dir_id 単位で�
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Dict, List
 
 from app.config import SESSION_TTL_SECONDS
 from app.models.common import Dims
@@ -29,16 +28,16 @@ class DirectoryEntry:
     field2_dir: str
     hist_dir: str
     parsed_input: ParsedInput
-    plt_frames: List[PltFrameRaw]
+    plt_frames: list[PltFrameRaw]
     ts_index: TimeseriesIndexRaw
-    plt_variables: List[str]
-    plt_dims: Dict[str, int]
+    plt_variables: list[str]
+    plt_dims: dict[str, int]
     last_access: float = field(default_factory=time.time)
 
 
 class DirectoryStore:
     def __init__(self) -> None:
-        self._entries: Dict[str, DirectoryEntry] = {}
+        self._entries: dict[str, DirectoryEntry] = {}
 
     def add(
         self,
@@ -46,7 +45,7 @@ class DirectoryStore:
         field2_dir: str,
         hist_dir: str,
         parsed_input: ParsedInput,
-        plt_frames: List[PltFrameRaw],
+        plt_frames: list[PltFrameRaw],
         ts_index: TimeseriesIndexRaw,
         first_frame: ParsedPlt,
     ) -> DirectoryMeta:

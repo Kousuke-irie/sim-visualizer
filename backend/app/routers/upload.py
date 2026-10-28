@@ -1,5 +1,4 @@
 import os
-from typing import Union
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
@@ -12,8 +11,8 @@ from app.services.store import store
 router = APIRouter(prefix="/api", tags=["upload"])
 
 
-@router.post("/upload", response_model=Union[PltMeta, DatMeta])
-async def upload_file(file: UploadFile = File(...)) -> Union[PltMeta, DatMeta]:
+@router.post("/upload", response_model=PltMeta | DatMeta)
+async def upload_file(file: UploadFile = File(...)) -> PltMeta | DatMeta:
     filename = file.filename or ""
     stem, ext = os.path.splitext(filename)
     ext = ext.lower()
@@ -42,8 +41,8 @@ async def upload_file(file: UploadFile = File(...)) -> Union[PltMeta, DatMeta]:
     return store.add_dat(variable, parsed_dat)
 
 
-@router.get("/meta/{file_id}", response_model=Union[PltMeta, DatMeta])
-async def get_meta(file_id: str) -> Union[PltMeta, DatMeta]:
+@router.get("/meta/{file_id}", response_model=PltMeta | DatMeta)
+async def get_meta(file_id: str) -> PltMeta | DatMeta:
     try:
         return store.get_meta(file_id)
     except KeyError:

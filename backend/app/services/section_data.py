@@ -8,8 +8,6 @@ X, Y, Z はそれぞれ I, J, K のみに依存する矩形格子であること
 (v方向, h方向, nvar) の形状になるよう PLANE_CONFIG で揃えている。
 """
 
-from typing import Dict, List, Optional, Tuple
-
 import numpy as np
 
 from app.config import MISSING_VALUE
@@ -34,7 +32,7 @@ def _mask_missing(arr: np.ndarray) -> np.ma.MaskedArray:
     return np.ma.masked_where(np.isclose(arr, MISSING_VALUE), arr)
 
 
-def _to_nested_list(masked: np.ma.MaskedArray) -> List[List[Optional[float]]]:
+def _to_nested_list(masked: np.ma.MaskedArray) -> list[list[float | None]]:
     mask = np.ma.getmaskarray(masked)
     data = masked.data
     return [[None if mask[i, j] else float(data[i, j]) for j in range(data.shape[1])] for i in range(data.shape[0])]
@@ -42,7 +40,7 @@ def _to_nested_list(masked: np.ma.MaskedArray) -> List[List[Optional[float]]]:
 
 def extract_section_data(entry: PltEntry, req: SectionDataRequest) -> SectionDataResponse:
     cfg = PLANE_CONFIG[req.plane]
-    idx_var: Dict[str, int] = {name: i for i, name in enumerate(entry.variables)}
+    idx_var: dict[str, int] = {name: i for i, name in enumerate(entry.variables)}
 
     for name in (cfg["h"], cfg["v"], req.variable):
         if name not in idx_var:
@@ -82,7 +80,7 @@ def extract_section_data(entry: PltEntry, req: SectionDataRequest) -> SectionDat
         vector_h_label = cfg["vec_h"]
         vector_v_label = cfg["vec_v"]
 
-    value_range: Tuple[float, float] = (float(values2d.min()), float(values2d.max()))
+    value_range: tuple[float, float] = (float(values2d.min()), float(values2d.max()))
 
     return SectionDataResponse(
         h_coords=h_coords,

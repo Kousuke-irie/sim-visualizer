@@ -8,6 +8,6 @@ target-version = "py312"
 extend-exclude = [".venv"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "B"]
+select = ["E", "F", "W", "I", "B", "UP"]
 # FastAPI の Depends/Query 等をデフォルト引数に書く慣習と衝突するため
 ignore = ["B008"]

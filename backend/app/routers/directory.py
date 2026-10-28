@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 
@@ -35,7 +34,7 @@ OUTSIDE_DATA_ROOT_DETAIL = "許可されたデータディレクトリの外に�
 
 
 @router.get("/browse", response_model=DirectoryBrowseResponse)
-async def browse_directory(path: Optional[str] = None) -> DirectoryBrowseResponse:
+async def browse_directory(path: str | None = None) -> DirectoryBrowseResponse:
     # 起点はデータルート（docker compose では /data）。それより上や外はたどらせない
     target = path or first_existing_data_root()
     if target is None:
@@ -105,7 +104,7 @@ async def open_directory(req: DirectoryOpenRequest) -> DirectoryMeta:
         raise HTTPException(status_code=400, detail="input.dat が見つかりません")
 
     try:
-        with open(input_path, "r", encoding="utf-8", errors="replace") as f:
+        with open(input_path, encoding="utf-8", errors="replace") as f:
             parsed_input = parse_input_dat(f.read())
     except InputParseError as e:
         raise HTTPException(status_code=400, detail=f"input.dat の解析に失敗しました: {e}") from e

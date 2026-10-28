@@ -8,7 +8,6 @@ list-directed read の仕様（1回の read は必ず新しい行から読み始
 """
 
 from dataclasses import dataclass
-from typing import Dict, List
 
 
 class InputParseError(ValueError):
@@ -29,15 +28,15 @@ class ParsedInput:
     endtime: float
     dt: float
     dx: float
-    z_levels: List[float]
+    z_levels: list[float]
     nhist: int
     histout: float
-    points: List[HistPointRaw]
-    result_dirs: Dict[str, str]  # {"hist": ..., "field1": ..., "field2": ...}
+    points: list[HistPointRaw]
+    result_dirs: dict[str, str]  # {"hist": ..., "field1": ..., "field2": ...}
 
 
 class _LineCursor:
-    def __init__(self, lines: List[str]):
+    def __init__(self, lines: list[str]):
         self._lines = lines
         self._pos = 0
 
@@ -48,12 +47,12 @@ class _LineCursor:
         self._pos += 1
         return line
 
-    def take_tokens(self) -> List[str]:
+    def take_tokens(self) -> list[str]:
         return self.take().split()
 
 
-def _strip_comments_and_blanks(text: str) -> List[str]:
-    lines: List[str] = []
+def _strip_comments_and_blanks(text: str) -> list[str]:
+    lines: list[str] = []
     for raw_line in text.splitlines():
         line = raw_line.split("#", 1)[0].strip()
         if line:
@@ -61,7 +60,7 @@ def _strip_comments_and_blanks(text: str) -> List[str]:
     return lines
 
 
-def _first_float(tokens: List[str], label: str) -> float:
+def _first_float(tokens: list[str], label: str) -> float:
     """行の先頭トークンを float にする。失敗を素の ValueError/IndexError で漏らすと API が 500 になるため変換する。"""
     if not tokens:
         raise InputParseError(f"{label}のトークン数が不足しています")
@@ -145,7 +144,7 @@ def parse_input_dat(text: str) -> ParsedInput:
         raise InputParseError("nhist の数値変換に失敗しました") from e
     histout = _first_float(nh_tokens[1:], "nhist,histout 行の histout ")
 
-    points: List[HistPointRaw] = []
+    points: list[HistPointRaw] = []
     if nhist != 0:
         ij_tokens = cur.take_tokens()  # 22: ijhist0 (flat, 3*nhist)
         if len(ij_tokens) < nhist * 3:

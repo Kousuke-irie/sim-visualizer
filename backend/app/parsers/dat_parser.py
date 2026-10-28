@@ -6,7 +6,6 @@
 
 import re
 from dataclasses import dataclass
-from typing import Dict, List
 
 import numpy as np
 
@@ -19,15 +18,15 @@ class DatParseError(ValueError):
 
 @dataclass
 class ParsedDat:
-    grid: Dict[str, float]  # {"i": .., "j": .., "n": .., "h": ..}
-    depths: List[str]
-    depth_values: List[float]
+    grid: dict[str, float]  # {"i": .., "j": .., "n": .., "h": ..}
+    depths: list[str]
+    depth_values: list[float]
     times: np.ndarray  # shape (n_times,)
     values: np.ndarray  # shape (n_times, n_depths)
 
 
-def _parse_grid_line(line: str) -> Dict[str, float]:
-    grid: Dict[str, float] = {}
+def _parse_grid_line(line: str) -> dict[str, float]:
+    grid: dict[str, float] = {}
     for key in ("i", "j", "n", "h"):
         m = re.search(rf"\b{key}\s*=\s*(-?\d+(?:\.\d+)?)", line, re.IGNORECASE)
         if not m:
@@ -36,7 +35,7 @@ def _parse_grid_line(line: str) -> Dict[str, float]:
     return grid
 
 
-def _parse_depth_header(line: str) -> List[str]:
+def _parse_depth_header(line: str) -> list[str]:
     tokens = line.split()
     if len(tokens) < 2:
         raise DatParseError("2行目（列ヘッダ）から深度ラベルを取得できません")

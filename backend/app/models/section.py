@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -12,15 +12,15 @@ class SectionDataRequest(BaseModel):
 
 
 class SectionDataResponse(BaseModel):
-    h_coords: List[float]
-    v_coords: List[float]
+    h_coords: list[float]
+    v_coords: list[float]
     h_label: str
     v_label: str
-    values: List[List[Optional[float]]]  # [v][h]、欠損は None
-    vector_h: Optional[List[List[Optional[float]]]] = None
-    vector_v: Optional[List[List[Optional[float]]]] = None
-    vector_h_label: Optional[str] = None
-    vector_v_label: Optional[str] = None
+    values: list[list[float | None]]  # [v][h]、欠損は None
+    vector_h: list[list[float | None]] | None = None
+    vector_v: list[list[float | None]] | None = None
+    vector_h_label: str | None = None
+    vector_v_label: str | None = None
     actual_coord: float
     actual_index: int
-    value_range: List[float]
+    value_range: list[float]

@@ -5,7 +5,6 @@
 """
 
 from collections import OrderedDict
-from typing import Tuple
 
 from app.parsers.plt_parser import ParsedPlt, parse_plt_bytes
 
@@ -15,7 +14,7 @@ DEFAULT_CAPACITY = 8
 class PltCache:
     def __init__(self, capacity: int = DEFAULT_CAPACITY) -> None:
         self._capacity = capacity
-        self._data: "OrderedDict[Tuple[str, int], ParsedPlt]" = OrderedDict()
+        self._data: OrderedDict[tuple[str, int], ParsedPlt] = OrderedDict()
 
     def get_or_parse(self, dir_id: str, frame_index: int, path: str) -> ParsedPlt:
         key = (dir_id, frame_index)
