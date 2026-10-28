@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "test": "vitest run --dir src",
     "typecheck": "tsc -b --noEmit",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "plotly.js-dist-min": "^2.34.0",
@@ -23,6 +25,7 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "prettier": "^3.3.3",
     "typescript": "^5.5.3",
     "vite": "^5.4.0",
     "vitest": "^2.1.9"

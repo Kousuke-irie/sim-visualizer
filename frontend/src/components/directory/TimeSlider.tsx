@@ -66,7 +66,12 @@ export default function TimeSlider({ frames, position, onPositionChange, timeUni
       <div className="segmented" role="radiogroup" aria-label="時間の単位">
         {(['sec', 'hour'] as TimeUnit[]).map((unit) => (
           <label key={unit} className={`segmented__option ${timeUnit === unit ? 'is-active' : ''}`}>
-            <input type="radio" name="time-slider-unit" checked={timeUnit === unit} onChange={() => onTimeUnitChange(unit)} />
+            <input
+              type="radio"
+              name="time-slider-unit"
+              checked={timeUnit === unit}
+              onChange={() => onTimeUnitChange(unit)}
+            />
             {unit === 'sec' ? '秒' : '時間'}
           </label>
         ))}

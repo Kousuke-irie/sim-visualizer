@@ -196,7 +196,12 @@ export default function DirectoryView() {
       )}
 
       {meta && (
-        <div className="segmented app__tabs" role="radiogroup" aria-label="ディレクトリモードの表示切替" style={{ marginBottom: '1.25rem' }}>
+        <div
+          className="segmented app__tabs"
+          role="radiogroup"
+          aria-label="ディレクトリモードの表示切替"
+          style={{ marginBottom: '1.25rem' }}
+        >
           <label className={`segmented__option ${subTab === 'section' ? 'is-active' : ''}`}>
             <input
               type="radio"

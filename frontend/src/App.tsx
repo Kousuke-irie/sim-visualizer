@@ -13,7 +13,16 @@ export default function App() {
       <header className="app__navbar">
         <div className="app__brand">
           <span className="app__logo">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M3 17l5-6 4 4 5-8 4 5" />
             </svg>
           </span>

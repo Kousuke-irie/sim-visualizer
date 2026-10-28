@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { fetchDirectorySectionData, fetchSectionData } from '../api/client'
-import type { DirectorySectionDataRequest, DirectorySectionDataResponse, SectionDataRequest, SectionDataResponse } from '../types'
+import type {
+  DirectorySectionDataRequest,
+  DirectorySectionDataResponse,
+  SectionDataRequest,
+  SectionDataResponse,
+} from '../types'
 
 type SectionDataState = {
   data: SectionDataResponse | null
