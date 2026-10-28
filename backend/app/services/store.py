@@ -1,12 +1,12 @@
 """アップロード済みデータのインメモリ管理。
 
 パース済みの NumPy 配列をプロセス内メモリに保持し、パラメータ変更のたびに
-再パースせず抽出・描画のみ行う。TTLを過ぎたエントリはアクセス時に破棄する。
+再パースせず抽出・描画のみ行う。有効期限の管理は TTLStore に任せる。
 """
 
 import time
-import uuid
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -14,6 +14,7 @@ from app.config import MISSING_VALUE, SESSION_TTL_SECONDS
 from app.models.common import Coords, DatGrid, DatMeta, Dims, PltMeta
 from app.parsers.dat_parser import ParsedDat
 from app.parsers.plt_parser import ParsedPlt
+from app.services.ttl_store import TTLStore
 
 
 @dataclass
@@ -21,7 +22,6 @@ class PltEntry:
     variables: list[str]
     dims: dict[str, int]
     grid: np.ndarray  # shape (K, J, I, nvar)
-    last_access: float = field(default_factory=time.time)
 
 
 @dataclass
@@ -32,26 +32,20 @@ class DatEntry:
     depth_values: list[float]
     times: np.ndarray  # shape (n_times,)
     values: np.ndarray  # shape (n_times, n_depths)
-    last_access: float = field(default_factory=time.time)
 
 
 Entry = PltEntry | DatEntry
 
 
 class Store:
-    def __init__(self) -> None:
-        self._entries: dict[str, Entry] = {}
+    def __init__(self, clock: Callable[[], float] = time.time) -> None:
+        self._entries: TTLStore[Entry] = TTLStore(SESSION_TTL_SECONDS, clock=clock)
 
     def add_plt(self, parsed: ParsedPlt) -> PltMeta:
-        self._purge_expired()
-        file_id = uuid.uuid4().hex
         entry = PltEntry(variables=parsed.variables, dims=parsed.dims, grid=parsed.grid)
-        self._entries[file_id] = entry
-        return self._build_plt_meta(file_id, entry)
+        return self._build_plt_meta(self._entries.add(entry), entry)
 
     def add_dat(self, variable: str, parsed: ParsedDat) -> DatMeta:
-        self._purge_expired()
-        file_id = uuid.uuid4().hex
         entry = DatEntry(
             variable=variable,
             grid=parsed.grid,
@@ -60,40 +54,28 @@ class Store:
             times=parsed.times,
             values=parsed.values,
         )
-        self._entries[file_id] = entry
-        return self._build_dat_meta(file_id, entry)
+        return self._build_dat_meta(self._entries.add(entry), entry)
 
     def get_entry(self, file_id: str) -> PltEntry:
         entry = self._entries.get(file_id)
         if not isinstance(entry, PltEntry):
             raise KeyError(file_id)
-        entry.last_access = time.time()
         return entry
 
     def get_dat_entry(self, file_id: str) -> DatEntry:
         entry = self._entries.get(file_id)
         if not isinstance(entry, DatEntry):
             raise KeyError(file_id)
-        entry.last_access = time.time()
         return entry
 
     def get_meta(self, file_id: str) -> PltMeta | DatMeta:
         entry = self._entries.get(file_id)
-        if entry is None:
-            raise KeyError(file_id)
-        entry.last_access = time.time()
         if isinstance(entry, PltEntry):
             return self._build_plt_meta(file_id, entry)
         return self._build_dat_meta(file_id, entry)
 
     def delete(self, file_id: str) -> None:
-        self._entries.pop(file_id, None)
-
-    def _purge_expired(self) -> None:
-        now = time.time()
-        expired = [fid for fid, e in self._entries.items() if now - e.last_access > SESSION_TTL_SECONDS]
-        for fid in expired:
-            self._entries.pop(fid, None)
+        self._entries.delete(file_id)
 
     @staticmethod
     def _build_plt_meta(file_id: str, entry: PltEntry) -> PltMeta:
