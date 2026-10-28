@@ -242,7 +242,9 @@ export default function DirectoryView() {
         </>
       )}
 
-      {meta && tsParams && subTab === 'timeseries' && (
+      {/* tsParams は最初の取得が成功するまで null。エラー表示と地点・パラメータの選択はそれを待たずに出し、
+          初回取得に失敗しても別の組み合わせを選び直せるようにする */}
+      {meta && subTab === 'timeseries' && (
         <>
           <ErrorBanner message={tsError} />
           <PointParamSelect
@@ -252,15 +254,17 @@ export default function DirectoryView() {
             point={tsPoint}
             onChange={handlePointParamChange}
           />
-          <div className="section-view__body">
-            <TimeseriesControls meta={tsMeta} params={tsParams} onChange={updateTsParams} />
-            <TimeseriesPlot
-              meta={tsMeta}
-              data={tsData ? { times: tsData.times, values: tsData.values } : null}
-              loading={tsLoading}
-              params={tsParams}
-            />
-          </div>
+          {tsParams && (
+            <div className="section-view__body">
+              <TimeseriesControls meta={tsMeta} params={tsParams} onChange={updateTsParams} />
+              <TimeseriesPlot
+                meta={tsMeta}
+                data={tsData ? { times: tsData.times, values: tsData.values } : null}
+                loading={tsLoading}
+                params={tsParams}
+              />
+            </div>
+          )}
         </>
       )}
     </div>
