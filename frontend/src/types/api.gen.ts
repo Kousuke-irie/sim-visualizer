@@ -679,6 +679,8 @@ export interface components {
             editable: boolean;
             /** Line No */
             line_no: number;
+            /** Locked */
+            locked: boolean[];
             /** Tokens */
             tokens: string[];
         };

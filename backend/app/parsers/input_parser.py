@@ -12,7 +12,7 @@ list-directed read の仕様（1回の read は必ず新しい行から読み始
 """
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 class InputParseError(ValueError):
@@ -39,6 +39,9 @@ class ParsedInput:
     points: list[HistPointRaw]
     result_dirs: dict[str, str]  # {"hist": ..., "field1": ..., "field2": ...}
     with_fkm_in: bool = True  # fkm_in,fkc_in 行がある版として読んだか
+    # 構造を決める行が、コメント・空行を除いた何番目の行か（"dims" / "nhist" / "ijhist"）。
+    # 新しいランの作成で、格子寸法と地点の値を変更させないために使う
+    line_roles: dict[str, int] = field(default_factory=dict)
 
 
 class _LineCursor:
@@ -55,6 +58,11 @@ class _LineCursor:
 
     def take_tokens(self) -> list[str]:
         return self.take().split()
+
+    @property
+    def last_index(self) -> int:
+        """直前に読んだ行の位置（コメント・空行を除いた行の中での番号）。"""
+        return self._pos - 1
 
 
 def _strip_comments_and_blanks(text: str) -> list[str]:
@@ -90,7 +98,9 @@ def parse_input_dat(text: str, with_fkm_in: bool = True) -> ParsedInput:
 
     cur.take_tokens()  # 1: isw(1..6)
 
+    roles: dict[str, int] = {}
     dims_tokens = cur.take_tokens()  # 2: in,jn,kn,nest
+    roles["dims"] = cur.last_index
     if len(dims_tokens) < 4:
         raise InputParseError("2行目（in,jn,kn,nest）のトークン数が不足しています")
     try:
@@ -152,6 +162,7 @@ def parse_input_dat(text: str, with_fkm_in: bool = True) -> ParsedInput:
     cur.take_tokens()  # 20: cst,eps,nend
 
     nh_tokens = cur.take_tokens()  # 21: nhist,histout
+    roles["nhist"] = cur.last_index
     if len(nh_tokens) < 2:
         raise InputParseError("nhist,histout 行のトークン数が不足しています")
     try:
@@ -163,6 +174,7 @@ def parse_input_dat(text: str, with_fkm_in: bool = True) -> ParsedInput:
     points: list[HistPointRaw] = []
     if nhist != 0:
         ij_tokens = cur.take_tokens()  # 22: ijhist0 (flat, 3*nhist)
+        roles["ijhist"] = cur.last_index
         if len(ij_tokens) < nhist * 3:
             raise InputParseError(f"ijhist0 のトークン数が不足しています（期待={nhist * 3}、実際={len(ij_tokens)}）")
         try:
@@ -194,4 +206,5 @@ def parse_input_dat(text: str, with_fkm_in: bool = True) -> ParsedInput:
         points=points,
         result_dirs={"hist": hist_dir, "field1": field1_dir, "field2": field2_dir},
         with_fkm_in=with_fkm_in,
+        line_roles=roles,
     )

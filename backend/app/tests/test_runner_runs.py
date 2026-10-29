@@ -177,3 +177,32 @@ def test_failure_midway_leaves_no_partial_run(base, monkeypatch):
         create_run(str(base), spec())
     assert not (base.parent / "mecamamo_202606_v17").exists()
     assert not any(p.name.startswith(".mecamamo_202606_v17") for p in base.parent.iterdir())
+
+
+# --- 格子寸法と地点の値は変更できない（変えると計算の実行まで失敗に気づけないため） ---
+
+
+def test_grid_and_point_values_are_locked_in_the_template(base):
+    lines = {tuple(line.tokens): line for line in get_template(str(base)).input_lines}
+    assert lines[("4", "5", "3", "1")].locked == [True, True, True, True]  # in,jn,kn,nest
+    assert lines[("2", "300.0")].locked == [True, False]  # nhist は固定、histout は変更できる
+    assert all(lines[("2", "3", "1", "3", "4", "1")].locked)  # ijhist0
+    assert lines[("0.8",)].locked == [False]
+
+
+@pytest.mark.parametrize(
+    ("tokens", "edited", "message"),
+    [
+        (["4", "5", "3", "1"], ["8", "5", "3", "1"], "格子寸法"),
+        (["2", "300.0"], ["3", "300.0"], "地点"),
+        (["2", "3", "1", "3", "4", "1"], ["2", "3", "1", "3", "9", "1"], "地点"),
+    ],
+)
+def test_editing_locked_values_is_rejected(base, tokens, edited, message):
+    with pytest.raises(InvalidInputError, match=message):
+        preview(str(base), spec(input_edits=[InputEdit(line_no=line_no(base, tokens), tokens=edited)]))
+
+
+def test_unlocked_value_on_a_locked_line_can_change(base):
+    p = preview(str(base), spec(input_edits=[InputEdit(line_no=line_no(base, ["2", "300.0"]), tokens=["2", "600.0"])]))
+    assert [(c.before, c.after) for c in p.changes] == [("2 300.0", "2 600.0")]

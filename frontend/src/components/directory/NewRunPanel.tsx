@@ -16,6 +16,9 @@ import type { CreatedRun, DirectoryMeta, RunPreview, RunTemplate } from '../../t
 
 type Props = { meta: DirectoryMeta }
 
+const LOCKED_HINT =
+  '変更できません（出力先・ファイル名は新しいランの外へ書き出さないため、格子寸法・地点はデータやソースと食い違わないため）'
+
 // ディレクトリモードの「新しいラン」タブ。表示中のランを元に、input.dat と eco.h の値を変えた新しいランを作る
 // （DESIGN_research_features.md §4.1）。作成はホストの runner が行い、計算の実行は R5 で追加する
 export default function NewRunPanel({ meta }: Props) {
@@ -99,7 +102,8 @@ function NewRunEditor({ dirId, template }: { dirId: string; template: RunTemplat
       <section className="time-slider-card new-run__section">
         <h3>input.dat の値</h3>
         <p className="new-run__note">
-          数値の行だけ変更できます。ファイル名や出力先の行は、計算が新しいランの外へ書き出さないよう変更できません。
+          数値の値だけ変更できます。ファイル名や出力先は計算が新しいランの外へ書き出さないよう、
+          格子寸法（in,jn,kn,nest）と地点（nhist・ijhist0）はデータやソースと食い違わないよう、変更できません（灰色の値）。
         </p>
         <table className="new-run__table">
           <thead>
@@ -122,18 +126,28 @@ function NewRunEditor({ dirId, template }: { dirId: string; template: RunTemplat
                   <td>{line.comment}</td>
                   <td className="new-run__tokens">
                     {line.editable
-                      ? tokens.map((t, i) => (
-                          <input
-                            key={i}
-                            type="text"
-                            aria-label={`${line.line_no}行目の${i + 1}番目の値`}
-                            className={isFortranNumber(t) ? '' : 'is-invalid'}
-                            value={t}
-                            size={Math.max(4, t.length + 1)}
-                            onChange={(e) => setInputToken(line.line_no, i, e.target.value)}
-                          />
-                        ))
-                      : line.tokens.join(' ')}
+                      ? tokens.map((t, i) =>
+                          line.locked[i] ? (
+                            <span key={i} className="new-run__locked" title={LOCKED_HINT}>
+                              {t}
+                            </span>
+                          ) : (
+                            <input
+                              key={i}
+                              type="text"
+                              aria-label={`${line.line_no}行目の${i + 1}番目の値`}
+                              className={isFortranNumber(t) ? '' : 'is-invalid'}
+                              value={t}
+                              size={Math.max(4, t.length + 1)}
+                              onChange={(e) => setInputToken(line.line_no, i, e.target.value)}
+                            />
+                          ),
+                        )
+                      : line.tokens.map((t, i) => (
+                          <span key={i} className="new-run__locked" title={LOCKED_HINT}>
+                            {t}
+                          </span>
+                        ))}
                   </td>
                 </tr>
               )

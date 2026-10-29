@@ -29,7 +29,13 @@ from app.models.runs import (
 )
 from app.parsers.input_parser import InputParseError, parse_input_dat, source_reads_fkm_in
 from app.runner.compile_command import default_compile_command, parse_compile_command
-from app.runner.editors import apply_eco_edits, apply_input_edits, parse_eco_constants, parse_input_lines
+from app.runner.editors import (
+    Locks,
+    apply_eco_edits,
+    apply_input_edits,
+    parse_eco_constants,
+    parse_input_lines,
+)
 from app.services.path_policy import PathNotAllowedError, resolve_within_data_roots
 
 RECORD_FILE = "simviz_run.json"
@@ -86,12 +92,29 @@ def _with_fkm_in(base: Path) -> bool:
     return source_reads_fkm_in(source.read_text(encoding="utf-8", errors="replace")) if source.is_file() else True
 
 
-def _result_dirs(base: Path, input_text: str) -> set[str]:
+def _parse_base_input(base: Path, input_text: str):
     try:
-        parsed = parse_input_dat(input_text, with_fkm_in=_with_fkm_in(base))
+        return parse_input_dat(input_text, with_fkm_in=_with_fkm_in(base))
     except InputParseError as e:
         raise InvalidInputError(f"元のランの input.dat を解析できません: {e}") from e
+
+
+def _result_dirs(base: Path, input_text: str) -> set[str]:
+    parsed = _parse_base_input(base, input_text)
     return {parsed.result_dirs["hist"], parsed.result_dirs["field1"], parsed.result_dirs["field2"], "field3"}
+
+
+def _structural_locks(base: Path, input_text: str) -> Locks:
+    """格子寸法（in,jn,kn,nest）と地点（nhist・ijhist0）の値は変更させない。
+
+    格子寸法はデータファイルや param.h と、地点数は地点の座標の数と食い違うと、
+    作成時の検査をすり抜けて計算の実行まで失敗に気づけないため。histout（hist の出力間隔）は変更できる。
+    """
+    roles = _parse_base_input(base, input_text).line_roles
+    locks: Locks = {roles["dims"]: None, roles["nhist"]: {0}}
+    if "ijhist" in roles:
+        locks[roles["ijhist"]] = None
+    return locks
 
 
 def plan_copy(base: Path, input_text: str) -> tuple[list[CopyEntry], list[ExcludedEntry], set[str]]:
@@ -172,7 +195,9 @@ def get_template(base_dir: str) -> RunTemplate:
         base_dir=str(base),
         default_name=default_run_name(base),
         default_compile_command=default_compile_command(base),
-        input_lines=[InputLineModel(**vars(line)) for line in parse_input_lines(input_text)],
+        input_lines=[
+            InputLineModel(**vars(line)) for line in parse_input_lines(input_text, _structural_locks(base, input_text))
+        ],
         eco_constants=[EcoConstantModel(**vars(c)) for c in parse_eco_constants(eco_text)],
         copy_entries=copy,
         excluded=excluded,
@@ -196,13 +221,14 @@ def _target_dir(base: Path, name: str) -> Path:
 def _edited_files(base: Path, spec: NewRunSpec) -> tuple[str, str | None, list[RunChange]]:
     """編集後の input.dat・eco.h の内容と、変更点の一覧を作る（ファイルには書かない）。"""
     input_text = _read_input(base)
-    lines = {line.line_no: line for line in parse_input_lines(input_text)}
+    locks = _structural_locks(base, input_text)
+    lines = {line.line_no: line for line in parse_input_lines(input_text, locks)}
     for e in spec.input_edits:
         if e.line_no not in lines:
             raise InvalidInputError(f"input.dat に {e.line_no} 行目の値はありません")
     # 元と同じ値の「編集」は変更として数えない
     input_edits = {e.line_no: e.tokens for e in spec.input_edits if e.tokens != lines[e.line_no].tokens}
-    new_input = apply_input_edits(input_text, input_edits)
+    new_input = apply_input_edits(input_text, input_edits, locks)
     # 書き換えた結果が、このランのソースの版の input.dat として読めることを確かめる
     try:
         parse_input_dat(new_input, with_fkm_in=_with_fkm_in(base))

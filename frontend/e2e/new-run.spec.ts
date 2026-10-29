@@ -54,4 +54,13 @@ test.describe('新しいラン', () => {
     await expect(field2Row).toBeVisible()
     await expect(field2Row.locator('input')).toHaveCount(0)
   })
+
+  test('格子寸法と地点の値は変更できず、hist の出力間隔は変更できる', async ({ page }) => {
+    const row = (comment: string) => page.locator('tr', { has: page.getByRole('cell', { name: comment, exact: true }) })
+    await expect(row('in,jn,kn,nest').locator('input')).toHaveCount(0)
+    await expect(row('ijhist0').locator('input')).toHaveCount(0)
+    // nhist,histout の行は histout だけが入力欄
+    await expect(row('nhist,histout').locator('input')).toHaveCount(1)
+    await expect(row('nhist,histout').locator('input')).toHaveValue('300.0')
+  })
 })

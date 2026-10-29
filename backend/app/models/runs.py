@@ -9,7 +9,8 @@ class InputLineModel(ApiModel):
     line_no: int
     tokens: list[str]
     comment: str
-    editable: bool  # 数値だけの行。ファイル名・出力先の行は編集できない
+    editable: bool  # 変更できる値が1つ以上ある行。ファイル名・出力先の行は編集できない
+    locked: list[bool]  # 値ごとに変更できないか（格子寸法・地点の値、数値でない値）
 
 
 class EcoConstantModel(ApiModel):
