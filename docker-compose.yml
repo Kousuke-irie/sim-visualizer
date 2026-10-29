@@ -8,6 +8,13 @@ services:
     environment:
       # ディレクトリモードで開けるのはマウントした /data 配下のみ（DESIGN_directory_mode.md 2.1）
       SIMVIZ_DATA_ROOTS: /data
+      # 新しいランの作成・実行はホストの runner に依頼する（DESIGN_research_features.md §4.3）
+      SIMVIZ_RUNNER_URL: http://host.docker.internal:8100
+      SIMVIZ_RUNNER_TOKEN: ${SIMVIZ_RUNNER_TOKEN:-}
+      # コンテナ内の /data/… をホストの DATA_DIR/… に読み替えて runner に渡す
+      SIMVIZ_HOST_DATA_DIR: ${DATA_DIR:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Linux でもホストに届くように（Mac の Docker Desktop では不要）
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
