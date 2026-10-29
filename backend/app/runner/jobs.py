@@ -80,11 +80,20 @@ def _count_frames(field_dir: str) -> int:
         return 0
 
 
-def _process_alive(pid: int) -> bool:
+def _process_alive(pid: int, *, reap: bool = False) -> bool:
     """pid が、このアプリが起動したプロセスグループの先頭として生きているか。
 
     pid が別のプロセスに再利用されていても騙されないよう、pgid も確かめる。
+    reap=True では、終わって回収待ち（ゾンビ）になっている自分の子を回収してから判定する。
+    Linux ではゾンビにも kill(pid, 0) が成功するため、回収しないと「生きている」と見え続ける。
+    Popen で待っている子に使うと終了コードを横取りしてしまうので、見張り直している計算にだけ使う。
     """
+    if reap:
+        try:
+            if os.waitpid(pid, os.WNOHANG)[0] == pid:
+                return False
+        except ChildProcessError:
+            pass  # 自分の子ではない（runner の再起動前に起動した計算）
     try:
         os.kill(pid, 0)
         return os.getpgid(pid) == pid
@@ -334,7 +343,7 @@ class JobQueue:
                 self._watch_unowned(job)
 
     def _watch_unowned(self, job: _JobState) -> None:
-        while job.pid and _process_alive(job.pid):
+        while job.pid and _process_alive(job.pid, reap=True):
             with self._cond:
                 if self._stopping:
                     return
