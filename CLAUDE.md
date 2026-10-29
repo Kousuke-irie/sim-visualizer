@@ -81,7 +81,9 @@ PYTHON="$PWD/../backend/.venv/bin/python" npm run e2e
 - Docker を使わずにバックエンドを起動するときは、`SIMVIZ_DATA_ROOTS=<計算結果の親ディレクトリ>` を指定する
   （未指定だと `/data` 以外は開けない。DESIGN_directory_mode.md 2.1）。
 - 新しいランの作成は**ホストの runner**（`cd backend && set -a && . ../.env && set +a && .venv/bin/python -m app.runner`）が行う。
-  E2E は runner も自動で起動する（ポート 8101・専用トークン）。
+  E2E は runner も自動で起動する（ポート 8101・専用トークン・専用の待ち行列ファイル）。
+- 計算の実行のテストには本物の gfortran を使わない。`sample_data.write_fake_toolchain` の偽の gfortran を PATH の先頭に置く
+  （pytest は `test_runner_jobs.py` の fixture、E2E は `playwright.config.ts` で設定済み）。
 - Docker を使わずに Vite を起動するときは `API_PROXY_TARGET=http://127.0.0.1:8000 npm run dev`。
   `vite.config.ts` を一時的に書き換える必要はない（DESIGN.md 17-4 / 18-4 に書いた回避策はもう不要）。
 - 動作確認用の計算結果ディレクトリは `cd backend && .venv/bin/python -m app.tests.sample_data <出力先>` で作れる。
