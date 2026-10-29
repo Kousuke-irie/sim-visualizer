@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import type { CompareSectionResponse, DirectorySectionDataResponse } from '../../types'
+import type {
+  CompareSectionResponse,
+  CompareTimeseriesResponse,
+  DirectorySectionDataResponse,
+  DirectoryTimeseriesResponse,
+} from '../../types'
+import { createDefaultTimeseriesParams } from '../timeseries/timeseriesParams'
 import { createDefaultSectionParams } from '../section/sectionDefaults'
-import { buildDiffView, runLabel, symmetricRange } from './compareFigure'
+import {
+  buildDiffView,
+  buildOverlayTraces,
+  buildPairViews,
+  runLabel,
+  symmetricRange,
+  unionDepths,
+} from './compareFigure'
 
 function section(values: (number | null)[][]): DirectorySectionDataResponse {
   return {
@@ -93,5 +106,90 @@ describe('runLabel', () => {
   it('パスの末尾のディレクトリ名', () => {
     expect(runLabel('/data/3次元ラン/mecamamo_202606_v5')).toBe('mecamamo_202606_v5')
     expect(runLabel('/data/sim/')).toBe('sim')
+  })
+})
+
+describe('buildPairViews', () => {
+  it('色範囲が自動なら A・B の値範囲の和集合を両方に使う', () => {
+    const res = {
+      ...RES,
+      a: { ...RES.a, value_range: [1, 4] as [number, number] },
+      b: { ...RES.b, value_range: [0.5, 3] as [number, number] },
+    }
+    const { a, b } = buildPairViews(res, PARAMS, LABELS)
+    expect(a.params.colorRange).toEqual({ auto: false, vmin: 0.5, vmax: 4 })
+    expect(b.params.colorRange).toEqual(a.params.colorRange)
+    expect(a.data).toBe(res.a)
+    expect(b.data).toBe(res.b)
+  })
+
+  it('手動の色範囲はそのまま', () => {
+    const manual = { ...PARAMS, colorRange: { auto: false, vmin: 0, vmax: 10 } }
+    expect(buildPairViews(RES, manual, LABELS).a.params.colorRange).toEqual(manual.colorRange)
+  })
+
+  it('タイトルでどちらのランかを示す', () => {
+    const { a, b } = buildPairViews(RES, PARAMS, LABELS)
+    expect(a.params.axis.title).toBe('A: mecamamo_202606_v2 — TEMP')
+    expect(b.params.axis.title?.startsWith('B: mecamamo_202606_v5 — ')).toBe(true)
+  })
+})
+
+function hist(depths: string[], values: number[][]): DirectoryTimeseriesResponse {
+  return {
+    variable: 'DOX',
+    point: '01',
+    grid: { i: 2, j: 3, n: 1, h: 4 },
+    depths,
+    depth_values: depths.map((d) => parseFloat(d)),
+    times: [0, 3600],
+    values,
+  }
+}
+
+describe('buildOverlayTraces', () => {
+  const ts: CompareTimeseriesResponse = {
+    point_a: '01',
+    point_b: '02',
+    a: hist(
+      ['-1.75m', '-0.75m'],
+      [
+        [1, 2],
+        [3, 4],
+      ],
+    ),
+    b: hist(
+      ['-0.75m', '0.25m'],
+      [
+        [5, 6],
+        [7, 8],
+      ],
+    ),
+  }
+  const params = { ...createDefaultTimeseriesParams(unionDepths(ts)), timeUnit: 'hour' as const }
+
+  it('深度は A の並び＋B にしか無いもの', () => {
+    expect(unionDepths(ts)).toEqual(['-1.75m', '-0.75m', '0.25m'])
+  })
+
+  it('A は実線・B は破線で、同じ深度は同じ色', () => {
+    const traces = buildOverlayTraces(ts, params, LABELS) as {
+      name: string
+      x: number[]
+      y: number[]
+      line: { color: string; dash: string }
+    }[]
+    expect(traces.map((t) => t.name)).toEqual(['A -1.75m', 'A -0.75m', 'B -0.75m', 'B 0.25m'])
+    const aMid = traces[1]
+    const bMid = traces[2]
+    expect(aMid.line).toEqual({ color: bMid.line.color, dash: 'solid' })
+    expect(bMid.line.dash).toBe('dash')
+    expect(bMid.y).toEqual([5, 7]) // B の -0.75m は B 自身の1列目
+    expect(aMid.x).toEqual([0, 1]) // 時間単位 hour
+  })
+
+  it('選択していない深度は描かない', () => {
+    const traces = buildOverlayTraces(ts, { ...params, selectedDepths: ['0.25m'] }, LABELS) as { name: string }[]
+    expect(traces.map((t) => t.name)).toEqual(['B 0.25m'])
   })
 })

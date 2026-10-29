@@ -19,14 +19,24 @@ const DEFAULT_POSITIONS = {
   vectorKey: { x: 0.88, y: 1.15 },
 }
 
+// 比較タブで2枚並べると図の幅が半分になり、紙面座標で決めた位置ではラベルどうしが重なる。
+// 縦軸ラベルを外側へ、流速の凡例をタイトルの横から図の左上（タイトルの下）へ移す
+const COMPACT_POSITIONS = {
+  ...DEFAULT_POSITIONS,
+  ylabel: { x: -0.2, y: 0.5 },
+  vectorKey: { x: 0.35, y: 1.04 },
+}
+
 type Props = {
   data: SectionDataResponse | null
   loading: boolean
   params: SectionParams
   datasetKey: string
+  compact?: boolean
 }
 
-export default function SectionPlot({ data, loading, params, datasetKey }: Props) {
+export default function SectionPlot({ data, loading, params, datasetKey, compact = false }: Props) {
+  const positions = compact ? COMPACT_POSITIONS : DEFAULT_POSITIONS
   const chartRef = useRef<PlotlyChartHandle>(null)
   const [resetCounter, setResetCounter] = useState(0)
 
@@ -84,8 +94,8 @@ export default function SectionPlot({ data, loading, params, datasetKey }: Props
 
     const annotations: Partial<Annotations>[] = [
       {
-        x: DEFAULT_POSITIONS.title.x,
-        y: DEFAULT_POSITIONS.title.y,
+        x: positions.title.x,
+        y: positions.title.y,
         xref: 'paper',
         yref: 'paper',
         text: params.axis.title || defaultTitle(params, data),
@@ -93,8 +103,8 @@ export default function SectionPlot({ data, loading, params, datasetKey }: Props
         font: { size: 15 },
       },
       {
-        x: DEFAULT_POSITIONS.xlabel.x,
-        y: DEFAULT_POSITIONS.xlabel.y,
+        x: positions.xlabel.x,
+        y: positions.xlabel.y,
         xref: 'paper',
         yref: 'paper',
         text: params.axis.xlabel || `${data.h_label} [m]`,
@@ -102,8 +112,8 @@ export default function SectionPlot({ data, loading, params, datasetKey }: Props
         font: { size: 12 },
       },
       {
-        x: DEFAULT_POSITIONS.ylabel.x,
-        y: DEFAULT_POSITIONS.ylabel.y,
+        x: positions.ylabel.x,
+        y: positions.ylabel.y,
         xref: 'paper',
         yref: 'paper',
         text: params.axis.ylabel || `${data.v_label} [m]`,
@@ -116,8 +126,8 @@ export default function SectionPlot({ data, loading, params, datasetKey }: Props
     if (vectorResult && vectorResult.maxMag > 0) {
       const rounded = Math.round(vectorResult.maxMag * 100) / 100
       annotations.push({
-        x: DEFAULT_POSITIONS.vectorKey.x,
-        y: DEFAULT_POSITIONS.vectorKey.y,
+        x: positions.vectorKey.x,
+        y: positions.vectorKey.y,
         xref: 'paper',
         yref: 'paper',
         text: `${rounded} m/s`,
@@ -143,7 +153,7 @@ export default function SectionPlot({ data, loading, params, datasetKey }: Props
     }
 
     return { plotData: traces, layout: newLayout }
-  }, [data, params, datasetKey, resetCounter])
+  }, [data, params, datasetKey, resetCounter, positions])
 
   const config = useMemo(
     () => ({

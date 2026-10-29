@@ -3,6 +3,8 @@ import type {
   CompareCheckResponse,
   CompareSectionRequest,
   CompareSectionResponse,
+  CompareTimeseriesRequest,
+  CompareTimeseriesResponse,
   DatMeta,
   DirectoryBrowseResponse,
   DirectoryMeta,
@@ -127,4 +129,8 @@ export function compareCheck(req: CompareCheckRequest): Promise<CompareCheckResp
 
 export function fetchCompareSection(req: CompareSectionRequest): Promise<CompareSectionResponse> {
   return postJson('/compare/section', req)
+}
+
+export function fetchCompareTimeseries(req: CompareTimeseriesRequest): Promise<CompareTimeseriesResponse> {
+  return postJson('/compare/timeseries', req)
 }

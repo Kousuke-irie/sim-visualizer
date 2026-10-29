@@ -45,6 +45,8 @@ export type CompareCheckResponse = Schemas['CompareCheckResponse']
 export type ComparePoint = Schemas['ComparePoint']
 export type CompareSectionRequest = Schemas['CompareSectionRequest']
 export type CompareSectionResponse = Schemas['CompareSectionResponse']
+export type CompareTimeseriesRequest = Schemas['CompareTimeseriesRequest']
+export type CompareTimeseriesResponse = Schemas['CompareTimeseriesResponse']
 
 // === ここから下はフロントエンドだけが持つ UI 状態（サーバーには送らない）。手書きで管理する ===
 

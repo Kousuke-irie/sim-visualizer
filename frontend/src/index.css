@@ -466,9 +466,15 @@ input[type='text']:focus {
   justify-content: space-between;
 }
 
+.plot-card__header {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .plot-card__header h3 {
   margin: 0;
   font-size: 1rem;
+  white-space: nowrap;
 }
 
 .plot-card__actions {
@@ -780,4 +786,22 @@ input[type='text']:focus {
 .run-select {
   max-width: 420px;
   margin-bottom: 0.75rem;
+}
+
+/* 比較タブの「A・B を並べる」。広い画面では横に2枚、狭い画面では縦に並べて図を潰さない */
+.compare-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  min-width: 0;
+}
+
+@media (max-width: 1200px) {
+  .compare-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.compare-view-switch {
+  align-self: flex-end;
 }

@@ -77,4 +77,43 @@ test.describe('比較タブ', () => {
     await page.locator('.compare-select select').nth(1).selectOption({ label: 'run_small' })
     await expect(page.getByText(/格子寸法が異なるため比較できません: A=4x5x3 B=3x5x3/)).toBeVisible()
   })
+
+  test('「A・B を並べる」は2枚の図を同じ色範囲で描く', async ({ page }) => {
+    await openRun(page, runA)
+    await openRun(page, runB)
+    await page.getByText('比較', { exact: true }).click()
+    const responsePromise = page.waitForResponse('**/api/compare/section')
+    await page.locator('.compare-view-switch').getByText('A・B を並べる').click()
+    await responsePromise
+    await expect(page.locator('.js-plotly-plot:visible')).toHaveCount(2)
+
+    const ranges = await page.locator('.js-plotly-plot:visible').evaluateAll((els) =>
+      els.map((el) => {
+        const fill = (el as unknown as { data: { zmin: number; zmax: number }[] }).data[0]
+        return [fill.zmin, fill.zmax]
+      }),
+    )
+    expect(ranges[0]).toEqual(ranges[1])
+    await expect(page.getByText(/^A: run_a — /)).toBeVisible()
+    await expect(page.getByText(/^B: run_b — /)).toBeVisible()
+  })
+
+  test('「地点時系列」は同じ地点の A を実線・B を破線で重ねる', async ({ page }) => {
+    await openRun(page, runA)
+    await openRun(page, runB)
+    await page.getByText('比較', { exact: true }).click()
+    const responsePromise = page.waitForResponse('**/api/compare/timeseries')
+    await page.locator('.compare-view-switch').getByText('地点時系列').click()
+    const response = await responsePromise
+    expect(response.request().postDataJSON()).toMatchObject({ param: 'DOX', i: 2, j: 3 })
+    await expect(page.locator('.js-plotly-plot:visible')).toBeVisible()
+
+    const traces = (await plotTraces(page)) as { name: string; line: { dash: string } }[]
+    const a = traces.filter((t) => t.name.startsWith('A '))
+    const b = traces.filter((t) => t.name.startsWith('B '))
+    expect(a.length).toBeGreaterThan(0)
+    expect(b.length).toBe(a.length)
+    expect(a.every((t) => t.line.dash === 'solid')).toBe(true)
+    expect(b.every((t) => t.line.dash === 'dash')).toBe(true)
+  })
 })
