@@ -1,7 +1,7 @@
 """計算の待ち行列（runner, DESIGN_research_features.md §4.3〜§4.5）。
 
 本物の gfortran とモデルの代わりに、偽の gfortran（sample_data.write_fake_toolchain）を PATH の先頭に置く。
-偽の gfortran が作る a.out は、input.dat の endtime / ifit2 + 1 枚の tec-*.plt を少しずつ書き出す。
+偽の gfortran が作る a.out は、input.dat の endtime / ifit2 枚の tec-*.plt を少しずつ書き出す（本物と同じ枚数）。
 """
 
 import json
@@ -65,16 +65,13 @@ def record(run_dir):
 def test_job_compiles_runs_and_records_the_result(queue, base):
     run = new_run(base)
     job = queue.submit(run)
-    assert job.status == "queued" and job.frames_expected == 3  # endtime 7200 / ifit2 3600 + 1
+    # 実際のモデルは tec-00000 〜 tec-(endtime/ifit2 - 1) を書く（v16: endtime 86400 で24枚）。ここでは 7200 / 3600 = 2
+    assert job.status == "queued" and job.frames_expected == 2
 
     done = wait_for(queue, job.job_id, {"succeeded", "failed"})
     assert done.status == "succeeded", done.message
-    assert done.exit_code == 0 and done.frames_done == 3
-    assert sorted(p.name for p in (base.parent / "case_v2" / "field2").iterdir()) == [
-        "tec-00000.plt",
-        "tec-00001.plt",
-        "tec-00002.plt",
-    ]
+    assert done.exit_code == 0 and done.frames_done == done.frames_expected == 2
+    assert sorted(p.name for p in (base.parent / "case_v2" / "field2").iterdir()) == ["tec-00000.plt", "tec-00001.plt"]
     log = (base.parent / "case_v2" / LOG_FILE).read_text()
     assert "$ gfortran -O2 -o a.out mecnest.f90" in log and "fake model: done" in log
 
@@ -91,7 +88,7 @@ def test_only_one_job_runs_at_a_time(queue, base, monkeypatch):
     wait_for(queue, first.job_id, {"running"})
     assert queue.get(second.job_id).status == "queued"
     wait_for(queue, first.job_id, {"succeeded"})
-    assert wait_for(queue, second.job_id, {"succeeded"}).frames_done == 3
+    assert wait_for(queue, second.job_id, {"succeeded"}).frames_done == 2
     assert [j.name for j in queue.jobs()] == ["case_v3", "case_v2"]  # 新しいものから
 
 
@@ -172,7 +169,7 @@ def test_log_tail_returns_the_last_lines(queue, base):
     job = queue.submit(new_run(base))
     wait_for(queue, job.job_id, {"succeeded"})
     tail = queue.log_tail(job.job_id, 2)
-    assert tail.text.splitlines() == ["time = 7200.0 s", "fake model: done"]
+    assert tail.text.splitlines() == ["time = 3600.0 s", "fake model: done"]
     assert tail.truncated
 
 
@@ -228,10 +225,10 @@ def test_running_job_whose_process_is_gone_becomes_interrupted(tmp_path, base):
 def test_running_job_that_finished_while_runner_was_down_counts_as_succeeded(tmp_path, base):
     run = base.parent / "case_v2"
     new_run(base)
-    for t in range(3):
+    for t in range(2):
         (run / "field2" / f"tec-{t:05d}.plt").write_text("")
     state = tmp_path / "jobs.json"
-    write_state(state, run, "running", dead_pid())
+    write_state(state, run, "running", dead_pid(), frames_expected=2)
     job = JobQueue(state).get("j1")
     assert job.status == "succeeded" and job.exit_code is None and "不明" in job.message
 

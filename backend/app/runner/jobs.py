@@ -194,7 +194,9 @@ class JobQueue:
             compile_argv=argv,
             executable=executable,
             field_dir=str(run / parsed.result_dirs["field2"]),
-            frames_expected=round(parsed.endtime / parsed.ifit2) + 1,
+            # モデルは tec-00000 から endtime の直前の時刻までを書く（t = endtime の tec は書かない）。
+            # 設計時は +1 と見込んでいたが、R6 で実際のランを動かすと endtime / ifit2 枚だった（v16: 86400 で24枚）
+            frames_expected=round(parsed.endtime / parsed.ifit2),
             created_at=self._clock(),
         )
         with self._cond:
