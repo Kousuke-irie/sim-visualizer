@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import CORS_ALLOW_ORIGINS
 from app.errors import AccessDeniedError, AppError, InvalidInputError, NotFoundError, PayloadTooLargeError
-from app.routers import directory, section, timeseries, upload
+from app.routers import compare, directory, section, timeseries, upload
 
 app = FastAPI(title="Sim Visualizer API")
 
@@ -34,6 +34,7 @@ app.include_router(upload.router)
 app.include_router(section.router)
 app.include_router(timeseries.router)
 app.include_router(directory.router)
+app.include_router(compare.router)
 
 
 @app.get("/api/health")

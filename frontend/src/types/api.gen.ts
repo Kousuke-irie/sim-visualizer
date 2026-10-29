@@ -4,6 +4,40 @@
  */
 
 export interface paths {
+    "/api/compare/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check */
+        post: operations["check_api_compare_check_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/compare/section": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Section */
+        post: operations["section_api_compare_section_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/directory/browse": {
         parameters: {
             query?: never;
@@ -202,6 +236,73 @@ export interface components {
              * Format: binary
              */
             file: string;
+        };
+        /** CompareCheckRequest */
+        CompareCheckRequest: {
+            /** Dir A */
+            dir_a: string;
+            /** Dir B */
+            dir_b: string;
+        };
+        /** CompareCheckResponse */
+        CompareCheckResponse: {
+            /** Common Params */
+            common_params: string[];
+            /** Common Points */
+            common_points: components["schemas"]["ComparePoint"][];
+            /** Common Times */
+            common_times: number[];
+            /** Common Variables */
+            common_variables: string[];
+        };
+        /**
+         * ComparePoint
+         * @description A・B で同じ格子位置 (i, j) にある hist 地点の組。地点番号が同じでも位置が違えば組にしない。
+         */
+        ComparePoint: {
+            /** I */
+            i: number;
+            /** J */
+            j: number;
+            /** Point A */
+            point_a: string;
+            /** Point B */
+            point_b: string;
+        };
+        /** CompareSectionRequest */
+        CompareSectionRequest: {
+            /** Dir A */
+            dir_a: string;
+            /** Dir B */
+            dir_b: string;
+            /**
+             * Include Vectors
+             * @default true
+             */
+            include_vectors: boolean;
+            /**
+             * Plane
+             * @enum {string}
+             */
+            plane: "XY" | "XZ" | "YZ";
+            /** Slice Index */
+            slice_index: number;
+            /** Time Sec */
+            time_sec: number;
+            /** Variable */
+            variable: string;
+        };
+        /** CompareSectionResponse */
+        CompareSectionResponse: {
+            a: components["schemas"]["DirectorySectionDataResponse"];
+            b: components["schemas"]["DirectorySectionDataResponse"];
+            /** Diff */
+            diff: (number | null)[][];
+            /** Diff Range */
+            diff_range: [
+                number,
+                number
+            ] | null;
         };
         /** Coords */
         Coords: {
@@ -535,6 +636,72 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    check_api_compare_check_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompareCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompareCheckResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    section_api_compare_section_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompareSectionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompareSectionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     browse_directory_api_directory_browse_get: {
         parameters: {
             query?: {

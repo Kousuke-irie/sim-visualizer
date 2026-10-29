@@ -65,7 +65,7 @@ def is_land(i: int, j: int) -> bool:
     return i == 0
 
 
-def make_plt_text(ni: int = 4, nj: int = 5, nk: int = 3, t: int = 0) -> str:
+def make_plt_text(ni: int = 4, nj: int = 5, nk: int = 3, t: int = 0, temp_offset: float = 0.0) -> str:
     """Tecplot POINT 形式。K→J→I の順（I が最速）で1行1格子点。nk は Z_LEVELS の長さまで。"""
     lines = [
         f"Title=No.{t:05d} data",
@@ -80,7 +80,7 @@ def make_plt_text(ni: int = 4, nj: int = 5, nk: int = 3, t: int = 0) -> str:
                     u = v = w = temp = sal = dox = MISSING_VALUE
                 else:
                     u, v, w = 0.1 * i, 0.05 * j, 0.01 * k
-                    temp = temp_value(i, j, k, t)
+                    temp = temp_value(i, j, k, t) + temp_offset  # 比較テスト用に TEMP だけずらせる
                     sal = 30.0 + 0.01 * j
                     dox = 2.0 + 0.5 * k + t
                 lines.append(" ".join(f"{val:.6f}" for val in (x, y, z, u, v, w, temp, sal, dox)))
@@ -150,13 +150,16 @@ def write_simulation_dir(
     nk: int = 3,
     with_fkm_in: bool = True,
     with_source: bool = False,
+    ifit2: float = 3600.0,
+    temp_offset: float = 0.0,
 ) -> Path:
     """input.dat / field2 / hist を持つ計算結果ディレクトリを root に作る。
 
     with_fkm_in で input.dat の版（fkm_in,fkc_in 行の有無）を、with_source で mecnest.f90 を置くかを選ぶ。
+    ifit2 は出力間隔[秒]（フレーム t の時刻は t*ifit2）、temp_offset は TEMP に足す値（2ケース比較のテスト用）。
     """
     root.mkdir(parents=True, exist_ok=True)
-    (root / "input.dat").write_text(make_input_dat_text(ni, nj, nk, with_fkm_in=with_fkm_in))
+    (root / "input.dat").write_text(make_input_dat_text(ni, nj, nk, ifit2=ifit2, with_fkm_in=with_fkm_in))
     if with_source:
         (root / "mecnest.f90").write_text(make_mecnest_source(with_fkm_in))
     field2 = root / "field2"
@@ -165,7 +168,7 @@ def write_simulation_dir(
     hist.mkdir(exist_ok=True)
     (root / "field1").mkdir(exist_ok=True)
     for t in range(n_frames):
-        (field2 / f"tec-{t:05d}.plt").write_text(make_plt_text(ni, nj, nk, t))
+        (field2 / f"tec-{t:05d}.plt").write_text(make_plt_text(ni, nj, nk, t, temp_offset))
     for param in ("TEMP", "DOX"):
         for point in ("01", "02"):
             (hist / f"{param}-{point}.dat").write_text(make_dat_text())
