@@ -26,3 +26,11 @@ class InvalidInputError(AppError):
 
 class PayloadTooLargeError(AppError):
     """アップロードが大きすぎる（413）"""
+
+
+class ConflictError(AppError):
+    """作ろうとしたものが既にある（409）"""
+
+
+class ServiceUnavailableError(AppError):
+    """依頼先（ホストの runner など）に接続できない（503）"""

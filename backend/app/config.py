@@ -25,3 +25,25 @@ def data_roots() -> list[str]:
     if not raw:
         return list(DEFAULT_DATA_ROOTS)
     return [p for p in raw.split(os.pathsep) if p]
+
+
+# ---- 再計算（ホストの runner）への依頼（DESIGN_research_features.md §4.3） ----
+RUNNER_URL_ENV = "SIMVIZ_RUNNER_URL"  # docker compose では http://host.docker.internal:8100
+DEFAULT_RUNNER_URL = "http://127.0.0.1:8100"
+# コンテナ内のパス（/data/…）とホスト上のパス（DATA_DIR/…）の対応。未設定なら同じパスとして扱う（Docker なしの起動）
+HOST_DATA_DIR_ENV = "SIMVIZ_HOST_DATA_DIR"
+CONTAINER_DATA_DIR_ENV = "SIMVIZ_CONTAINER_DATA_DIR"
+DEFAULT_CONTAINER_DATA_DIR = "/data"
+
+
+def runner_url() -> str:
+    return os.environ.get(RUNNER_URL_ENV, DEFAULT_RUNNER_URL).rstrip("/")
+
+
+def data_dir_mapping() -> tuple[str, str] | None:
+    """(コンテナ内の接頭辞, ホスト上の接頭辞)。対応づけが要らなければ None。"""
+    host = os.environ.get(HOST_DATA_DIR_ENV)
+    if not host:
+        return None
+    container = os.environ.get(CONTAINER_DATA_DIR_ENV, DEFAULT_CONTAINER_DATA_DIR)
+    return container.rstrip("/"), host.rstrip("/")

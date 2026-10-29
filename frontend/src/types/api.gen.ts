@@ -191,6 +191,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create */
+        post: operations["create_api_runs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview */
+        post: operations["preview_api_runs_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Template */
+        post: operations["template_api_runs_template_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/section/data": {
         parameters: {
             query?: never;
@@ -351,6 +402,43 @@ export interface components {
             Y: number[];
             /** Z */
             Z: number[];
+        };
+        /** CopyEntry */
+        CopyEntry: {
+            /** Bytes */
+            bytes: number;
+            /** Is Dir */
+            is_dir: boolean;
+            /** Path */
+            path: string;
+        };
+        /** CreateRunRequest */
+        CreateRunRequest: {
+            /** Compile Command */
+            compile_command: string;
+            /** Dir Id */
+            dir_id: string;
+            /**
+             * Eco Edits
+             * @default []
+             */
+            eco_edits: components["schemas"]["EcoEdit"][];
+            /**
+             * Input Edits
+             * @default []
+             */
+            input_edits: components["schemas"]["InputEdit"][];
+            /** Name */
+            name: string;
+        };
+        /** CreatedRun */
+        CreatedRun: {
+            /** Changes */
+            changes: components["schemas"]["RunChange"][];
+            /** Path */
+            path: string;
+            /** Record File */
+            record_file: string;
         };
         /** DatGrid */
         DatGrid: {
@@ -533,6 +621,29 @@ export interface components {
             /** Variable */
             variable: string;
         };
+        /** EcoConstantModel */
+        EcoConstantModel: {
+            /** Line No */
+            line_no: number;
+            /** Name */
+            name: string;
+            /** Value */
+            value: string;
+        };
+        /** EcoEdit */
+        EcoEdit: {
+            /** Name */
+            name: string;
+            /** Value */
+            value: string;
+        };
+        /** ExcludedEntry */
+        ExcludedEntry: {
+            /** Path */
+            path: string;
+            /** Reason */
+            reason: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -552,6 +663,24 @@ export interface components {
             x: number | null;
             /** Y */
             y: number | null;
+        };
+        /** InputEdit */
+        InputEdit: {
+            /** Line No */
+            line_no: number;
+            /** Tokens */
+            tokens: string[];
+        };
+        /** InputLineModel */
+        InputLineModel: {
+            /** Comment */
+            comment: string;
+            /** Editable */
+            editable: boolean;
+            /** Line No */
+            line_no: number;
+            /** Tokens */
+            tokens: string[];
         };
         /** PltFrameMeta */
         PltFrameMeta: {
@@ -591,6 +720,57 @@ export interface components {
             field2: string;
             /** Hist */
             hist: string;
+        };
+        /** RunChange */
+        RunChange: {
+            /** After */
+            after: string;
+            /** Before */
+            before: string;
+            /**
+             * File
+             * @enum {string}
+             */
+            file: "input.dat" | "eco.h";
+            /** Where */
+            where: string;
+        };
+        /** RunPreview */
+        RunPreview: {
+            /** Changes */
+            changes: components["schemas"]["RunChange"][];
+            /** Copy Bytes */
+            copy_bytes: number;
+            /** Copy Count */
+            copy_count: number;
+            /** Excluded */
+            excluded: components["schemas"]["ExcludedEntry"][];
+            /** Target Dir */
+            target_dir: string;
+        };
+        /** RunTemplate */
+        RunTemplate: {
+            /** Base Dir */
+            base_dir: string;
+            /** Copy Bytes */
+            copy_bytes: number;
+            /** Copy Entries */
+            copy_entries: components["schemas"]["CopyEntry"][];
+            /** Default Compile Command */
+            default_compile_command: string;
+            /** Default Name */
+            default_name: string;
+            /** Eco Constants */
+            eco_constants: components["schemas"]["EcoConstantModel"][];
+            /** Excluded */
+            excluded: components["schemas"]["ExcludedEntry"][];
+            /** Input Lines */
+            input_lines: components["schemas"]["InputLineModel"][];
+        };
+        /** RunTemplateRequest */
+        RunTemplateRequest: {
+            /** Dir Id */
+            dir_id: string;
         };
         /** SectionDataRequest */
         SectionDataRequest: {
@@ -1004,6 +1184,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PltMeta"] | components["schemas"]["DatMeta"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_api_runs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRunRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedRun"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_api_runs_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRunRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    template_api_runs_template_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RunTemplateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunTemplate"];
                 };
             };
             /** @description Validation Error */

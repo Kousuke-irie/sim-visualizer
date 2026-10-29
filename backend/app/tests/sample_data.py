@@ -6,7 +6,7 @@
 
 CLI として実行すると、指定ディレクトリに計算結果ディレクトリを書き出す（E2E 用）:
 
-    python -m app.tests.sample_data <出力先> [--temp-offset 1.5] [--ni 3]
+    python -m app.tests.sample_data <出力先> [--temp-offset 1.5] [--ni 3] [--model-files]
 """
 
 from pathlib import Path
@@ -127,6 +127,15 @@ def make_input_dat_text(
     )
 
 
+# eco.h（生態系パラメータの data 文）を縮めたもの。新しいランの作成で値を書き換えるテストに使う
+ECO_H_TEXT = """\
+\t\tdouble precision,dimension(Np) :: PHY
+\t\tdata Alp1/1.04167d-05/
+\t\tdata Iopt/54.7/
+\t\tdata aKp/0.0106/
+"""
+
+
 def make_mecnest_source(with_fkm_in: bool) -> str:
     """mecnest.f90 の input.dat 読み込み部分だけを模した最小のソース（版の判定に使う部分）。"""
     lines = [
@@ -152,6 +161,7 @@ def write_simulation_dir(
     ifit2: float = 3600.0,
     temp_offset: float = 0.0,
     points: list[tuple[int, int, int]] | None = None,
+    with_eco: bool = False,
 ) -> Path:
     """input.dat / field2 / hist を持つ計算結果ディレクトリを root に作る。
 
@@ -165,6 +175,8 @@ def write_simulation_dir(
     )
     if with_source:
         (root / "mecnest.f90").write_text(make_mecnest_source(with_fkm_in))
+    if with_eco:
+        (root / "eco.h").write_text(ECO_H_TEXT)
     field2 = root / "field2"
     hist = root / "hist"
     field2.mkdir(exist_ok=True)
@@ -185,5 +197,14 @@ if __name__ == "__main__":
     parser.add_argument("output_dir", type=Path)
     parser.add_argument("--temp-offset", type=float, default=0.0, help="TEMP に足す値（2ケース比較用）")
     parser.add_argument("--ni", type=int, default=4, help="I 方向の格子数（格子が違うランを作る用）")
+    parser.add_argument("--model-files", action="store_true", help="mecnest.f90 と eco.h も置く（新しいランの作成用）")
     args = parser.parse_args()
-    print(write_simulation_dir(args.output_dir, ni=args.ni, temp_offset=args.temp_offset))
+    print(
+        write_simulation_dir(
+            args.output_dir,
+            ni=args.ni,
+            temp_offset=args.temp_offset,
+            with_source=args.model_files,
+            with_eco=args.model_files,
+        )
+    )

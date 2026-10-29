@@ -297,6 +297,94 @@
         "title": "Coords",
         "type": "object"
       },
+      "CopyEntry": {
+        "properties": {
+          "bytes": {
+            "title": "Bytes",
+            "type": "integer"
+          },
+          "is_dir": {
+            "title": "Is Dir",
+            "type": "boolean"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "is_dir"
+        ],
+        "title": "CopyEntry",
+        "type": "object"
+      },
+      "CreateRunRequest": {
+        "properties": {
+          "compile_command": {
+            "title": "Compile Command",
+            "type": "string"
+          },
+          "dir_id": {
+            "title": "Dir Id",
+            "type": "string"
+          },
+          "eco_edits": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/EcoEdit"
+            },
+            "title": "Eco Edits",
+            "type": "array"
+          },
+          "input_edits": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/InputEdit"
+            },
+            "title": "Input Edits",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "compile_command",
+          "dir_id"
+        ],
+        "title": "CreateRunRequest",
+        "type": "object"
+      },
+      "CreatedRun": {
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/RunChange"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "record_file": {
+            "title": "Record File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "changes",
+          "record_file"
+        ],
+        "title": "CreatedRun",
+        "type": "object"
+      },
       "DatGrid": {
         "properties": {
           "h": {
@@ -873,6 +961,65 @@
         "title": "DirectoryTimeseriesResponse",
         "type": "object"
       },
+      "EcoConstantModel": {
+        "properties": {
+          "line_no": {
+            "title": "Line No",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "value",
+          "line_no"
+        ],
+        "title": "EcoConstantModel",
+        "type": "object"
+      },
+      "EcoEdit": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "value"
+        ],
+        "title": "EcoEdit",
+        "type": "object"
+      },
+      "ExcludedEntry": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "reason"
+        ],
+        "title": "ExcludedEntry",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -936,6 +1083,58 @@
           "y"
         ],
         "title": "HistPoint",
+        "type": "object"
+      },
+      "InputEdit": {
+        "properties": {
+          "line_no": {
+            "title": "Line No",
+            "type": "integer"
+          },
+          "tokens": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tokens",
+            "type": "array"
+          }
+        },
+        "required": [
+          "line_no",
+          "tokens"
+        ],
+        "title": "InputEdit",
+        "type": "object"
+      },
+      "InputLineModel": {
+        "properties": {
+          "comment": {
+            "title": "Comment",
+            "type": "string"
+          },
+          "editable": {
+            "title": "Editable",
+            "type": "boolean"
+          },
+          "line_no": {
+            "title": "Line No",
+            "type": "integer"
+          },
+          "tokens": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tokens",
+            "type": "array"
+          }
+        },
+        "required": [
+          "line_no",
+          "tokens",
+          "comment",
+          "editable"
+        ],
+        "title": "InputLineModel",
         "type": "object"
       },
       "PltFrameMeta": {
@@ -1039,6 +1238,150 @@
           "field2"
         ],
         "title": "ResultDirs",
+        "type": "object"
+      },
+      "RunChange": {
+        "properties": {
+          "after": {
+            "title": "After",
+            "type": "string"
+          },
+          "before": {
+            "title": "Before",
+            "type": "string"
+          },
+          "file": {
+            "enum": [
+              "input.dat",
+              "eco.h"
+            ],
+            "title": "File",
+            "type": "string"
+          },
+          "where": {
+            "title": "Where",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file",
+          "where",
+          "before",
+          "after"
+        ],
+        "title": "RunChange",
+        "type": "object"
+      },
+      "RunPreview": {
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/RunChange"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "copy_bytes": {
+            "title": "Copy Bytes",
+            "type": "integer"
+          },
+          "copy_count": {
+            "title": "Copy Count",
+            "type": "integer"
+          },
+          "excluded": {
+            "items": {
+              "$ref": "#/components/schemas/ExcludedEntry"
+            },
+            "title": "Excluded",
+            "type": "array"
+          },
+          "target_dir": {
+            "title": "Target Dir",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_dir",
+          "changes",
+          "copy_count",
+          "copy_bytes",
+          "excluded"
+        ],
+        "title": "RunPreview",
+        "type": "object"
+      },
+      "RunTemplate": {
+        "properties": {
+          "base_dir": {
+            "title": "Base Dir",
+            "type": "string"
+          },
+          "copy_bytes": {
+            "title": "Copy Bytes",
+            "type": "integer"
+          },
+          "copy_entries": {
+            "items": {
+              "$ref": "#/components/schemas/CopyEntry"
+            },
+            "title": "Copy Entries",
+            "type": "array"
+          },
+          "default_compile_command": {
+            "title": "Default Compile Command",
+            "type": "string"
+          },
+          "default_name": {
+            "title": "Default Name",
+            "type": "string"
+          },
+          "eco_constants": {
+            "items": {
+              "$ref": "#/components/schemas/EcoConstantModel"
+            },
+            "title": "Eco Constants",
+            "type": "array"
+          },
+          "excluded": {
+            "items": {
+              "$ref": "#/components/schemas/ExcludedEntry"
+            },
+            "title": "Excluded",
+            "type": "array"
+          },
+          "input_lines": {
+            "items": {
+              "$ref": "#/components/schemas/InputLineModel"
+            },
+            "title": "Input Lines",
+            "type": "array"
+          }
+        },
+        "required": [
+          "base_dir",
+          "default_name",
+          "default_compile_command",
+          "input_lines",
+          "eco_constants",
+          "copy_entries",
+          "excluded",
+          "copy_bytes"
+        ],
+        "title": "RunTemplate",
+        "type": "object"
+      },
+      "RunTemplateRequest": {
+        "properties": {
+          "dir_id": {
+            "title": "Dir Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dir_id"
+        ],
+        "title": "RunTemplateRequest",
         "type": "object"
       },
       "SectionDataRequest": {
@@ -1778,6 +2121,129 @@
         "summary": "Get Meta",
         "tags": [
           "upload"
+        ]
+      }
+    },
+    "/api/runs": {
+      "post": {
+        "operationId": "create_api_runs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedRun"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/api/runs/preview": {
+      "post": {
+        "operationId": "preview_api_runs_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/api/runs/template": {
+      "post": {
+        "operationId": "template_api_runs_template_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunTemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunTemplate"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Template",
+        "tags": [
+          "runs"
         ]
       }
     },

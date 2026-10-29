@@ -25,7 +25,10 @@
 4. **バックエンドは単一ワーカー前提。** ストアはインメモリなので `uvicorn --workers` を増やさない。
 5. **サーバー上のパスはデータルート配下に限定する。** ファイルを開く処理を追加するときは、ユーザー入力でも
    データファイルの中身でも、必ず `services/path_policy.py` を通す。
-6. **研究データ・個人情報をコミットしない。** `data/`、`.env`、`PORTFOLIO.md`、`.claude/settings.local.json` は `.gitignore` 済み。
+6. **ホストへの書き込みとコマンド実行は runner だけが行う。** バックエンドは計算結果を読み取り専用で扱い、
+   runner は新しいランのディレクトリの中にだけ書く。実行してよいのは gfortran と新しいランの実行ファイルだけで、
+   シェルを介さず引数の配列で起動する（`app/runner/compile_command.py`）。ブラウザからの文字列をシェルに渡さない。
+7. **研究データ・個人情報をコミットしない。** `data/`、`.env`、`PORTFOLIO.md`、`.claude/settings.local.json` は `.gitignore` 済み。
    テストデータは `backend/app/tests/sample_data.py` の合成データを使う。
 
 ## 3. 作業の進め方
@@ -77,6 +80,8 @@ PYTHON="$PWD/../backend/.venv/bin/python" npm run e2e
 - 通常は `docker compose up`（http://localhost:5173）。`DATA_DIR` は `.env` で指定する。
 - Docker を使わずにバックエンドを起動するときは、`SIMVIZ_DATA_ROOTS=<計算結果の親ディレクトリ>` を指定する
   （未指定だと `/data` 以外は開けない。DESIGN_directory_mode.md 2.1）。
+- 新しいランの作成は**ホストの runner**（`cd backend && set -a && . ../.env && set +a && .venv/bin/python -m app.runner`）が行う。
+  E2E は runner も自動で起動する（ポート 8101・専用トークン）。
 - Docker を使わずに Vite を起動するときは `API_PROXY_TARGET=http://127.0.0.1:8000 npm run dev`。
   `vite.config.ts` を一時的に書き換える必要はない（DESIGN.md 17-4 / 18-4 に書いた回避策はもう不要）。
 - 動作確認用の計算結果ディレクトリは `cd backend && .venv/bin/python -m app.tests.sample_data <出力先>` で作れる。
