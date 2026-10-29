@@ -131,7 +131,7 @@ def test_create_then_run_through_the_backend(client, runner_in_process, job_queu
             break
         time.sleep(0.05)
     assert listed[0]["status"] == "succeeded", listed[0]["message"]
-    assert listed[0]["frames_done"] == listed[0]["frames_expected"] == 3
+    assert listed[0]["frames_done"] == listed[0]["frames_expected"] == 2
 
     log = client.get(f"/api/runs/jobs/{job['job_id']}/log", params={"lines": 1}).json()
     assert log["text"] == "fake model: done"

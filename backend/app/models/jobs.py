@@ -23,7 +23,7 @@ class Job(ApiModel):
     finished_at: str | None
     exit_code: int | None
     frames_done: int  # 書き出された tec-*.plt の数
-    frames_expected: int  # endtime / ifit2 + 1
+    frames_expected: int  # endtime / ifit2（tec-00000 〜）
     elapsed_sec: float | None
     eta_sec: float | None  # 終了までの見込み（2枚目が出るまでは不明）
 

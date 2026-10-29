@@ -47,10 +47,10 @@ test.describe('新しいラン', () => {
     expect(readFileSync(join(created, 'eco.h'), 'utf-8')).toContain('data Iopt/60.0/')
     expect(readFileSync(join(base, 'eco.h'), 'utf-8')).toContain('data Iopt/54.7/') // 元のランは変わらない
 
-    // 偽の gfortran でコンパイルし、偽のモデルが 3 枚の tec-*.plt を書き出すまで待つ（一覧は数秒おきに更新される）
+    // 偽の gfortran でコンパイルし、偽のモデルが 2 枚の tec-*.plt を書き出すまで待つ（一覧は数秒おきに更新される）
     const job = jobItem(page, created)
     await expect(job.locator('.jobs__status')).toHaveText('完了', { timeout: 20_000 })
-    await expect(job).toContainText('出力 3 / 3 フレーム')
+    await expect(job).toContainText('出力 2 / 2 フレーム')
     const record = JSON.parse(readFileSync(join(created, 'simviz_run.json'), 'utf-8'))
     expect(record).toMatchObject({ status: 'succeeded', exit_code: 0, gfortran_version: 'GNU Fortran (fake) 0.0' })
 
@@ -73,7 +73,7 @@ test.describe('新しいラン', () => {
 
     const job = jobItem(page, join(dirname(base), 'case_slow'))
     await expect(job.locator('.jobs__status')).toHaveText('計算中', { timeout: 15_000 })
-    await expect(job).toContainText(/出力 \d+ \/ 21 フレーム/)
+    await expect(job).toContainText(/出力 \d+ \/ 20 フレーム/)
     page.once('dialog', (dialog) => dialog.accept())
     await job.getByRole('button', { name: '中止' }).click()
     await expect(job.locator('.jobs__status')).toHaveText('中止', { timeout: 15_000 })
