@@ -7,8 +7,12 @@
 CLI として実行すると、指定ディレクトリに計算結果ディレクトリを書き出す（E2E 用）:
 
     python -m app.tests.sample_data <出力先> [--temp-offset 1.5] [--ni 3] [--model-files]
+    python -m app.tests.sample_data <bin ディレクトリ> --fake-toolchain   # 偽の gfortran（計算の実行のテスト用）
 """
 
+import shlex
+import stat
+import sys
 from pathlib import Path
 
 from app.config import MISSING_VALUE
@@ -190,6 +194,41 @@ def write_simulation_dir(
     return root
 
 
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+
+# 偽の gfortran。本物と同じく引数の配列で呼ばれ、-o の名前で
+# 「偽のモデル（app.tests.fake_model）を起動する実行ファイル」を作る。
+# 実際のモデルは数時間かかり gfortran も要るので、待ち行列・進捗・中止のテストはこれで行う。
+# FAKE_GFORTRAN_FAIL を設定するとコンパイルエラーにする
+_FAKE_GFORTRAN = """#!/bin/sh
+if [ "$1" = "--version" ]; then echo "GNU Fortran (fake) 0.0"; exit 0; fi
+if [ -n "$FAKE_GFORTRAN_FAIL" ]; then echo "mecnest.f90:1:1: Error: fake compile error" >&2; exit 1; fi
+out=a.out
+while [ $# -gt 0 ]; do
+  if [ "$1" = "-o" ]; then out=$2; shift; fi
+  shift
+done
+printf '#!/bin/sh\\nPYTHONPATH=%s exec %s -m app.tests.fake_model\\n' {backend} {python} > "$out"
+chmod +x "$out"
+echo "fake gfortran: built $out"
+"""
+
+
+def write_fake_toolchain(bin_dir: Path) -> Path:
+    """bin_dir に偽の gfortran を置く。PATH の先頭に bin_dir を足すと、runner はこれでコンパイルする。"""
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    script = bin_dir / "gfortran"
+    # printf の引数として埋め込むので、パスは二重に引用する（日本語や空白を含むパスでも動くように）
+    script.write_text(
+        _FAKE_GFORTRAN.format(
+            backend=shlex.quote(shlex.quote(str(BACKEND_DIR))),
+            python=shlex.quote(shlex.quote(sys.executable)),
+        )
+    )
+    script.chmod(script.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    return bin_dir
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -198,7 +237,11 @@ if __name__ == "__main__":
     parser.add_argument("--temp-offset", type=float, default=0.0, help="TEMP に足す値（2ケース比較用）")
     parser.add_argument("--ni", type=int, default=4, help="I 方向の格子数（格子が違うランを作る用）")
     parser.add_argument("--model-files", action="store_true", help="mecnest.f90 と eco.h も置く（新しいランの作成用）")
+    parser.add_argument("--fake-toolchain", action="store_true", help="出力先に偽の gfortran を置く（計算の実行用）")
     args = parser.parse_args()
+    if args.fake_toolchain:
+        print(write_fake_toolchain(args.output_dir))
+        raise SystemExit
     print(
         write_simulation_dir(
             args.output_dir,

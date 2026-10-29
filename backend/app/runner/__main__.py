@@ -4,6 +4,7 @@
   SIMVIZ_RUNNER_TOKEN  バックエンドと共有するトークン
   SIMVIZ_DATA_ROOTS    計算結果の親ディレクトリ（ホスト上の絶対パス）。未設定なら DATA_DIR
                        （Docker が /data にマウントしているのと同じ場所）を使う
+  SIMVIZ_JOBS_FILE     待ち行列の保存先（任意。既定 ~/.simviz/jobs.json）
 """
 
 import os
@@ -12,6 +13,7 @@ import sys
 import uvicorn
 
 from app.config import DATA_ROOTS_ENV
+from app.runner.jobs import get_queue
 from app.runner.server import TOKEN_ENV, app
 
 HOST = "127.0.0.1"  # 外部からは接続させない
@@ -24,6 +26,8 @@ def main() -> None:
     missing = [name for name in (TOKEN_ENV, DATA_ROOTS_ENV) if not os.environ.get(name)]
     if missing:
         sys.exit(f"環境変数が設定されていません: {', '.join(missing)}（README の「再計算（runner）」を参照）")
+    # 要求を待たずに、前回の待ち行列を復旧して処理を再開する
+    get_queue()
     uvicorn.run(app, host=HOST, port=int(os.environ.get("SIMVIZ_RUNNER_PORT", DEFAULT_PORT)))
 
 

@@ -10,8 +10,9 @@ import secrets
 from fastapi import Depends, FastAPI, Header, HTTPException
 
 from app.error_handlers import register_app_error_handler
+from app.models.jobs import Job, JobList, JobLog, RunnerJobRequest, RunnerLogRequest, RunnerSubmitRequest
 from app.models.runs import CreatedRun, RunnerCreateRequest, RunnerTemplateRequest, RunPreview, RunTemplate
-from app.runner import runs
+from app.runner import jobs, runs
 
 TOKEN_ENV = "SIMVIZ_RUNNER_TOKEN"
 TOKEN_HEADER = "X-SimViz-Token"
@@ -46,3 +47,26 @@ def preview(req: RunnerCreateRequest) -> RunPreview:
 @app.post("/runs", response_model=CreatedRun)
 def create(req: RunnerCreateRequest) -> CreatedRun:
     return runs.create_run(req.base_dir, req)
+
+
+# 計算の待ち行列（§4.3〜§4.5）。バックエンドの runner_client に合わせて、すべて POST で受ける
+
+
+@app.post("/jobs", response_model=Job)
+def submit_job(req: RunnerSubmitRequest) -> Job:
+    return jobs.get_queue().submit(req.run_dir)
+
+
+@app.post("/jobs/list", response_model=JobList)
+def list_jobs() -> JobList:
+    return JobList(jobs=jobs.get_queue().jobs())
+
+
+@app.post("/jobs/cancel", response_model=Job)
+def cancel_job(req: RunnerJobRequest) -> Job:
+    return jobs.get_queue().cancel(req.job_id)
+
+
+@app.post("/jobs/log", response_model=JobLog)
+def job_log(req: RunnerLogRequest) -> JobLog:
+    return jobs.get_queue().log_tail(req.job_id, req.lines)

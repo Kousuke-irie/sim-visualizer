@@ -1,15 +1,19 @@
 """/api/runs/*: バックエンドから runner への依頼（runner はテスト内で直接呼ぶ）。"""
 
+import os
+import time
 import urllib.error
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.config import CONTAINER_DATA_DIR_ENV, HOST_DATA_DIR_ENV
+from app.runner import jobs
+from app.runner.jobs import JobQueue
 from app.runner.server import TOKEN_ENV
 from app.runner.server import app as runner_app
 from app.services import runner_client
-from app.tests.sample_data import write_simulation_dir
+from app.tests.sample_data import write_fake_toolchain, write_simulation_dir
 
 
 @pytest.fixture
@@ -92,3 +96,80 @@ def test_paths_are_translated_between_container_and_host(monkeypatch):
     assert runner_client.to_host_path("/database/x") == "/database/x"  # 接頭辞が似ているだけの別パスは読み替えない
     monkeypatch.delenv(HOST_DATA_DIR_ENV)
     assert runner_client.to_host_path("/data/runs/v16") == "/data/runs/v16"
+
+
+@pytest.fixture
+def job_queue(tmp_path, data_root, monkeypatch):
+    """runner の待ち行列を、テストごとの保存先と偽の gfortran で動かす。"""
+    bin_dir = write_fake_toolchain(data_root / "bin")
+    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
+    monkeypatch.setenv("FAKE_MODEL_FRAME_SECONDS", "0.05")
+    queue = JobQueue(tmp_path / "state" / "jobs.json", poll_interval=0.05)
+    queue.start()
+    monkeypatch.setattr(jobs, "_queue", queue)
+    yield queue
+    queue.shutdown()
+
+
+def test_create_then_run_through_the_backend(client, runner_in_process, job_queue, opened, monkeypatch):
+    dir_id, base = opened
+    template = client.post("/api/runs/template", json={"dir_id": dir_id}).json()
+    created = client.post(
+        "/api/runs",
+        json={"dir_id": dir_id, "name": "case_v2", "compile_command": template["default_compile_command"]},
+    ).json()
+
+    res = client.post("/api/runs/jobs", json={"path": created["path"]})
+    assert res.status_code == 200, res.text
+    job = res.json()
+    assert job["base_run"] == str(base)
+
+    deadline = time.monotonic() + 15
+    while time.monotonic() < deadline:
+        listed = client.get("/api/runs/jobs").json()["jobs"]
+        if listed[0]["status"] in ("succeeded", "failed"):
+            break
+        time.sleep(0.05)
+    assert listed[0]["status"] == "succeeded", listed[0]["message"]
+    assert listed[0]["frames_done"] == listed[0]["frames_expected"] == 3
+
+    log = client.get(f"/api/runs/jobs/{job['job_id']}/log", params={"lines": 1}).json()
+    assert log["text"] == "fake model: done"
+    # できたランは、そのまま可視化できる
+    assert client.post("/api/directory/open", json={"path": created["path"]}).status_code == 200
+
+    assert client.post("/api/runs/jobs", json={"path": created["path"]}).status_code == 409
+    assert client.post(f"/api/runs/jobs/{job['job_id']}/cancel").status_code == 409
+    assert client.get("/api/runs/jobs/nope/log").status_code == 404
+
+
+def test_job_paths_are_shown_as_container_paths(client, job_queue, monkeypatch):
+    monkeypatch.setenv(HOST_DATA_DIR_ENV, "/Users/me/Desktop")
+    monkeypatch.setenv(CONTAINER_DATA_DIR_ENV, "/data")
+    sent = {}
+
+    def send(path, payload):
+        sent[path] = payload
+        job = {
+            "job_id": "j1",
+            "name": "v17",
+            "run_dir": "/Users/me/Desktop/runs/v17",
+            "base_run": "/Users/me/Desktop/runs/v16",
+            "status": "queued",
+            "message": "",
+            "created_at": "2026-10-29T00:00:00+00:00",
+            "started_at": None,
+            "finished_at": None,
+            "exit_code": None,
+            "frames_done": 0,
+            "frames_expected": 3,
+            "elapsed_sec": None,
+            "eta_sec": None,
+        }
+        return 200, job if path == "/jobs" else {"jobs": [job]}
+
+    monkeypatch.setattr(runner_client, "_send", send)
+    body = client.post("/api/runs/jobs", json={"path": "/data/runs/v17"}).json()
+    assert sent["/jobs"] == {"run_dir": "/Users/me/Desktop/runs/v17"}
+    assert (body["run_dir"], body["base_run"]) == ("/data/runs/v17", "/data/runs/v16")
+    assert client.get("/api/runs/jobs").json()["jobs"][0]["run_dir"] == "/data/runs/v17"
