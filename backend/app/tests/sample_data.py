@@ -6,10 +6,9 @@
 
 CLI として実行すると、指定ディレクトリに計算結果ディレクトリを書き出す（E2E 用）:
 
-    python -m app.tests.sample_data <出力先>
+    python -m app.tests.sample_data <出力先> [--temp-offset 1.5] [--ni 3]
 """
 
-import sys
 from pathlib import Path
 
 from app.config import MISSING_VALUE
@@ -176,6 +175,11 @@ def write_simulation_dir(
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        sys.exit("usage: python -m app.tests.sample_data <output-dir>")
-    print(write_simulation_dir(Path(sys.argv[1])))
+    import argparse
+
+    parser = argparse.ArgumentParser(description="E2E 用の合成計算結果ディレクトリを書き出す")
+    parser.add_argument("output_dir", type=Path)
+    parser.add_argument("--temp-offset", type=float, default=0.0, help="TEMP に足す値（2ケース比較用）")
+    parser.add_argument("--ni", type=int, default=4, help="I 方向の格子数（格子が違うランを作る用）")
+    args = parser.parse_args()
+    print(write_simulation_dir(args.output_dir, ni=args.ni, temp_offset=args.temp_offset))

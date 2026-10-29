@@ -38,6 +38,14 @@ export type DirectoryTimeseriesResponse = Schemas['DirectoryTimeseriesResponse']
 export type DirectoryBrowseEntry = Schemas['DirectoryBrowseEntry']
 export type DirectoryBrowseResponse = Schemas['DirectoryBrowseResponse']
 
+// --- 2ケース比較（DESIGN_research_features.md §3） ---
+
+export type CompareCheckRequest = Schemas['CompareCheckRequest']
+export type CompareCheckResponse = Schemas['CompareCheckResponse']
+export type ComparePoint = Schemas['ComparePoint']
+export type CompareSectionRequest = Schemas['CompareSectionRequest']
+export type CompareSectionResponse = Schemas['CompareSectionResponse']
+
 // === ここから下はフロントエンドだけが持つ UI 状態（サーバーには送らない）。手書きで管理する ===
 
 // --- 表示スタイル（すべてクライアント側のみで完結し、変更は即座に反映される） ---
