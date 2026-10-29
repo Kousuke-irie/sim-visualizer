@@ -151,14 +151,18 @@ def write_simulation_dir(
     with_source: bool = False,
     ifit2: float = 3600.0,
     temp_offset: float = 0.0,
+    points: list[tuple[int, int, int]] | None = None,
 ) -> Path:
     """input.dat / field2 / hist を持つ計算結果ディレクトリを root に作る。
 
     with_fkm_in で input.dat の版（fkm_in,fkc_in 行の有無）を、with_source で mecnest.f90 を置くかを選ぶ。
     ifit2 は出力間隔[秒]（フレーム t の時刻は t*ifit2）、temp_offset は TEMP に足す値（2ケース比較のテスト用）。
+    points は hist 地点の (i, j, n)。既定は (2, 3, 1) と (3, 4, 1)。
     """
     root.mkdir(parents=True, exist_ok=True)
-    (root / "input.dat").write_text(make_input_dat_text(ni, nj, nk, ifit2=ifit2, with_fkm_in=with_fkm_in))
+    (root / "input.dat").write_text(
+        make_input_dat_text(ni, nj, nk, ifit2=ifit2, points=points, with_fkm_in=with_fkm_in)
+    )
     if with_source:
         (root / "mecnest.f90").write_text(make_mecnest_source(with_fkm_in))
     field2 = root / "field2"

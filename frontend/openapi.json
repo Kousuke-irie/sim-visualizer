@@ -206,6 +206,65 @@
         "title": "CompareSectionResponse",
         "type": "object"
       },
+      "CompareTimeseriesRequest": {
+        "properties": {
+          "dir_a": {
+            "title": "Dir A",
+            "type": "string"
+          },
+          "dir_b": {
+            "title": "Dir B",
+            "type": "string"
+          },
+          "i": {
+            "title": "I",
+            "type": "integer"
+          },
+          "j": {
+            "title": "J",
+            "type": "integer"
+          },
+          "param": {
+            "title": "Param",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dir_a",
+          "dir_b",
+          "param",
+          "i",
+          "j"
+        ],
+        "title": "CompareTimeseriesRequest",
+        "type": "object"
+      },
+      "CompareTimeseriesResponse": {
+        "properties": {
+          "a": {
+            "$ref": "#/components/schemas/DirectoryTimeseriesResponse"
+          },
+          "b": {
+            "$ref": "#/components/schemas/DirectoryTimeseriesResponse"
+          },
+          "point_a": {
+            "title": "Point A",
+            "type": "string"
+          },
+          "point_b": {
+            "title": "Point B",
+            "type": "string"
+          }
+        },
+        "required": [
+          "point_a",
+          "point_b",
+          "a",
+          "b"
+        ],
+        "title": "CompareTimeseriesResponse",
+        "type": "object"
+      },
       "Coords": {
         "properties": {
           "X": {
@@ -1343,6 +1402,47 @@
           }
         },
         "summary": "Section",
+        "tags": [
+          "compare"
+        ]
+      }
+    },
+    "/api/compare/timeseries": {
+      "post": {
+        "operationId": "timeseries_api_compare_timeseries_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareTimeseriesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompareTimeseriesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Timeseries",
         "tags": [
           "compare"
         ]

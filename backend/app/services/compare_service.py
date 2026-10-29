@@ -7,15 +7,17 @@ import math
 
 import numpy as np
 
-from app.errors import InvalidInputError
+from app.errors import InvalidInputError, NotFoundError
 from app.models.compare import (
     CompareCheckRequest,
     CompareCheckResponse,
     ComparePoint,
     CompareSectionRequest,
     CompareSectionResponse,
+    CompareTimeseriesRequest,
+    CompareTimeseriesResponse,
 )
-from app.models.directory import DirectorySectionDataRequest
+from app.models.directory import DirectorySectionDataRequest, DirectoryTimeseriesRequest
 from app.parsers.plt_parser import ParsedPlt
 from app.services import directory_service
 from app.services.directory_store import DirectoryEntry, directory_store
@@ -119,4 +121,28 @@ def get_section(req: CompareSectionRequest) -> CompareSectionResponse:
         b=section_b,
         diff=_to_nested_list(diff, valid),
         diff_range=diff_range,
+    )
+
+
+def _point_at(entry: DirectoryEntry, i: int, j: int, label: str) -> str:
+    point = next((p.point for p in entry.parsed_input.points if (p.i, p.j) == (i, j)), None)
+    if point is None:
+        raise NotFoundError(f"{label} には格子位置 ({i}, {j}) の hist 地点がありません")
+    return point
+
+
+def get_timeseries(req: CompareTimeseriesRequest) -> CompareTimeseriesResponse:
+    a = directory_store.get(req.dir_a)
+    b = directory_store.get(req.dir_b)
+    point_a = _point_at(a, req.i, req.j, "A")
+    point_b = _point_at(b, req.i, req.j, "B")
+    return CompareTimeseriesResponse(
+        point_a=point_a,
+        point_b=point_b,
+        a=directory_service.get_timeseries_data(
+            DirectoryTimeseriesRequest(dir_id=req.dir_a, param=req.param, point=point_a)
+        ),
+        b=directory_service.get_timeseries_data(
+            DirectoryTimeseriesRequest(dir_id=req.dir_b, param=req.param, point=point_b)
+        ),
     )
