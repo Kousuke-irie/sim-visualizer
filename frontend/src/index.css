@@ -890,3 +890,9 @@ input[type='text']:focus {
   background: #ecfdf5;
   border: 1px solid #a7f3d0;
 }
+
+.new-run__locked {
+  font-family: ui-monospace, Menlo, monospace;
+  color: #64748b;
+  padding: 0.2rem 0.35rem;
+}

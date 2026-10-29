@@ -7,9 +7,15 @@ const TEMPLATE: RunTemplate = {
   default_name: 'case_v2',
   default_compile_command: 'gfortran -O2 -o a.out mecnest.f90',
   input_lines: [
-    { line_no: 4, tokens: ['0.8'], comment: 'dt', editable: true },
-    { line_no: 8, tokens: ['3600.', '0.', '999999999999.'], comment: 'fifit2,5,6', editable: true },
-    { line_no: 33, tokens: ['field2'], comment: '', editable: false },
+    { line_no: 4, tokens: ['0.8'], comment: 'dt', editable: true, locked: [false] },
+    {
+      line_no: 8,
+      tokens: ['3600.', '0.', '999999999999.'],
+      comment: 'fifit2,5,6',
+      editable: true,
+      locked: [false, false, false],
+    },
+    { line_no: 33, tokens: ['field2'], comment: '', editable: false, locked: [true] },
   ],
   eco_constants: [
     { name: 'Iopt', value: '54.7', line_no: 3 },

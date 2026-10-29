@@ -1120,6 +1120,13 @@
             "title": "Line No",
             "type": "integer"
           },
+          "locked": {
+            "items": {
+              "type": "boolean"
+            },
+            "title": "Locked",
+            "type": "array"
+          },
           "tokens": {
             "items": {
               "type": "string"
@@ -1132,7 +1139,8 @@
           "line_no",
           "tokens",
           "comment",
-          "editable"
+          "editable",
+          "locked"
         ],
         "title": "InputLineModel",
         "type": "object"

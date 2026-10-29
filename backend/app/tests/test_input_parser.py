@@ -141,3 +141,24 @@ def test_default_layout_is_the_current_one():
 )
 def test_detect_layout_from_source(source, expected):
     assert source_reads_fkm_in(source) is expected
+
+
+# --- 構造を決める行の位置（新しいランの作成で読み取り専用にする、DESIGN_research_features.md §4.2） ---
+
+
+@pytest.mark.parametrize("with_fkm_in", [True, False])
+def test_structural_lines_are_located_by_read_order(with_fkm_in):
+    text = make_input_dat_text(with_fkm_in=with_fkm_in)
+    parsed = parse_input_dat(text, with_fkm_in=with_fkm_in)
+    stripped = [line.split("#", 1)[0].strip() for line in text.splitlines() if line.split("#", 1)[0].strip()]
+    assert stripped[parsed.line_roles["dims"]].startswith("4 5 3 1")
+    assert stripped[parsed.line_roles["nhist"]].split() == ["2", "300.0"]
+    assert stripped[parsed.line_roles["ijhist"]].split() == ["2", "3", "1", "3", "4", "1"]
+
+
+def test_structural_line_positions_follow_conditional_lines():
+    # milb が 0 でないと追加の1行が読まれ、その分だけ地点の行が後ろにずれる
+    text = make_input_dat_text(milb_mjlb="1 0 #miflib").replace("1 0 #miflib\n", "1 0 #miflib\n1 1 1\n")
+    parsed = parse_input_dat(text)
+    stripped = [line.split("#", 1)[0].strip() for line in text.splitlines() if line.split("#", 1)[0].strip()]
+    assert stripped[parsed.line_roles["nhist"]].split() == ["2", "300.0"]
