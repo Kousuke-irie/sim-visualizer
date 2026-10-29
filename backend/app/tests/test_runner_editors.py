@@ -1,7 +1,7 @@
 import pytest
 
 from app.errors import InvalidInputError
-from app.runner.compile_command import parse_compile_command
+from app.runner.compile_command import default_compile_command, parse_compile_command
 from app.runner.editors import (
     apply_eco_edits,
     apply_input_edits,
@@ -110,3 +110,32 @@ def test_compile_command_accepts_the_usual_form(src_dir):
 def test_compile_command_rejects_anything_else(src_dir, command, message):
     with pytest.raises(InvalidInputError, match=message):
         parse_compile_command(command, src_dir)
+
+
+# 実際のランには、eco.f90 と、その古い版の eco2.f90 が並んでいる（同じサブルーチンを定義する）。
+# 両方をリンクすると duplicate symbol で失敗するので、既定には入れず、指定されたら作る前に指摘する
+ECO_F90 = "      subroutine eco(n)\n      end\n      subroutine atten\n      end\n"
+ECO2_F90 = "      SUBROUTINE ECO(n)\n      end\n      subroutine atten()\n      end\n"
+
+
+@pytest.fixture
+def run_with_eco2(src_dir):
+    (src_dir / "eco.f90").write_text(ECO_F90)
+    (src_dir / "eco2.f90").write_text(ECO2_F90)
+    return src_dir
+
+
+def test_default_compile_command_leaves_out_the_old_eco2(run_with_eco2):
+    assert default_compile_command(run_with_eco2) == "gfortran -O2 -o a.out mecnest.f90 amamo.f90 eco.f90"
+    parse_compile_command(default_compile_command(run_with_eco2), run_with_eco2)
+
+
+def test_sources_defining_the_same_routine_are_rejected(run_with_eco2):
+    with pytest.raises(InvalidInputError, match=r"eco\.f90 と eco2\.f90 .*atten, eco"):
+        parse_compile_command("gfortran -O2 -o a.out mecnest.f90 eco.f90 eco2.f90", run_with_eco2)
+
+
+def test_routines_in_comments_or_end_statements_are_not_definitions(src_dir):
+    (src_dir / "a.f90").write_text("      subroutine eco\n      end subroutine eco\n")
+    (src_dir / "b.f90").write_text("! subroutine eco は a.f90 にある\n      call eco\n")
+    parse_compile_command("gfortran -o a.out a.f90 b.f90", src_dir)
