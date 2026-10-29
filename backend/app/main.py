@@ -3,7 +3,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import CORS_ALLOW_ORIGINS
-from app.errors import AccessDeniedError, AppError, InvalidInputError, NotFoundError, PayloadTooLargeError
+from app.errors import (
+    AccessDeniedError,
+    AppError,
+    ConflictError,
+    InvalidInputError,
+    NotFoundError,
+    PayloadTooLargeError,
+    ServiceUnavailableError,
+)
 from app.routers import compare, directory, section, timeseries, upload
 
 app = FastAPI(title="Sim Visualizer API")
@@ -20,6 +28,8 @@ STATUS_BY_ERROR: dict[type[AppError], int] = {
     AccessDeniedError: 403,
     InvalidInputError: 400,
     PayloadTooLargeError: 413,
+    ConflictError: 409,
+    ServiceUnavailableError: 503,
 }
 
 
