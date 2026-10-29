@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import CORS_ALLOW_ORIGINS
 from app.error_handlers import register_app_error_handler
-from app.routers import compare, directory, section, timeseries, upload
+from app.routers import compare, directory, runs, section, timeseries, upload
 
 app = FastAPI(title="Sim Visualizer API")
 
@@ -21,6 +21,7 @@ app.include_router(section.router)
 app.include_router(timeseries.router)
 app.include_router(directory.router)
 app.include_router(compare.router)
+app.include_router(runs.router)
 
 
 @app.get("/api/health")
