@@ -58,6 +58,14 @@ export type CreatedRun = Schemas['CreatedRun']
 export type InputLine = Schemas['InputLineModel']
 export type EcoConstant = Schemas['EcoConstantModel']
 
+// --- 計算の待ち行列（DESIGN_research_features.md §4.3〜§4.5） ---
+
+export type Job = Schemas['Job']
+export type JobStatus = Job['status']
+export type JobList = Schemas['JobList']
+export type JobLog = Schemas['JobLog']
+export type SubmitJobRequest = Schemas['SubmitJobRequest']
+
 // === ここから下はフロントエンドだけが持つ UI 状態（サーバーには送らない）。手書きで管理する ===
 
 // --- 表示スタイル（すべてクライアント側のみで完結し、変更は即座に反映される） ---
