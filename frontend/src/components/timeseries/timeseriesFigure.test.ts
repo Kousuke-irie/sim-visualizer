@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { COLOR_PALETTE } from '../../constants'
+import { LINE_COLORS } from '../../constants'
 import type { TimeseriesDataResponse, TimeseriesParams } from '../../types'
 import { createDefaultTimeseriesParams } from './timeseriesParams'
 import { buildTimeseriesLayout, buildTimeseriesTraces, resolveRange } from './timeseriesFigure'
@@ -36,7 +36,7 @@ describe('buildTimeseriesTraces', () => {
     const traces = buildTimeseriesTraces(META, DATA, params({ selectedDepths: ['0.25m'] })) as Trace[]
     expect(traces).toHaveLength(1)
     expect(traces[0].y).toEqual([3, 6, 9])
-    expect(traces[0].line.color).toBe(COLOR_PALETTE[2])
+    expect(traces[0].line.color).toBe(LINE_COLORS[2])
   })
 })
 
@@ -68,5 +68,21 @@ describe('buildTimeseriesLayout', () => {
     expect(layout.xaxis?.title).toEqual({ text: '経過時間' })
     expect(layout.yaxis).toMatchObject({ title: { text: 'DO' }, range: [1, 5] })
     expect(layout.xaxis?.range).toBeUndefined()
+  })
+})
+
+describe('線の色', () => {
+  // 以前は色見本用のパレット（2番目が白）を流用しており、2番目の深度の線が白い背景に溶けて見えなかった
+  it('白い背景で見える色だけを使う（明るすぎる色を含まない）', () => {
+    const luminance = (hex: string) => {
+      const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    }
+    expect(LINE_COLORS.every((c) => luminance(c) < 0.85)).toBe(true)
+  })
+
+  it('2番目の深度の線は白ではない', () => {
+    const [, second] = buildTimeseriesTraces(META, DATA, params()) as Trace[]
+    expect(second.line.color).not.toBe('#ffffff')
   })
 })
