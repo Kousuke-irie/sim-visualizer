@@ -5,6 +5,11 @@ import type {
   CompareSectionResponse,
   CompareTimeseriesRequest,
   CompareTimeseriesResponse,
+  CreateRunRequest,
+  CreatedRun,
+  RunPreview,
+  RunTemplate,
+  RunTemplateRequest,
   DatMeta,
   DirectoryBrowseResponse,
   DirectoryMeta,
@@ -133,4 +138,17 @@ export function fetchCompareSection(req: CompareSectionRequest): Promise<Compare
 
 export function fetchCompareTimeseries(req: CompareTimeseriesRequest): Promise<CompareTimeseriesResponse> {
   return postJson('/compare/timeseries', req)
+}
+
+// 新しいランの作成はホストの runner が行う。runner が起動していなければ 503 と起動方法が返る
+export function fetchRunTemplate(req: RunTemplateRequest): Promise<RunTemplate> {
+  return postJson('/runs/template', req, '新しいランの準備ができませんでした')
+}
+
+export function previewRun(req: CreateRunRequest): Promise<RunPreview> {
+  return postJson('/runs/preview', req, '確認できませんでした')
+}
+
+export function createRun(req: CreateRunRequest): Promise<CreatedRun> {
+  return postJson('/runs', req, '新しいランを作れませんでした')
 }

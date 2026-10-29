@@ -48,6 +48,16 @@ export type CompareSectionResponse = Schemas['CompareSectionResponse']
 export type CompareTimeseriesRequest = Schemas['CompareTimeseriesRequest']
 export type CompareTimeseriesResponse = Schemas['CompareTimeseriesResponse']
 
+// --- 新しいランの作成（DESIGN_research_features.md §4） ---
+
+export type RunTemplate = Schemas['RunTemplate']
+export type RunTemplateRequest = Schemas['RunTemplateRequest']
+export type CreateRunRequest = Schemas['CreateRunRequest']
+export type RunPreview = Schemas['RunPreview']
+export type CreatedRun = Schemas['CreatedRun']
+export type InputLine = Schemas['InputLineModel']
+export type EcoConstant = Schemas['EcoConstantModel']
+
 // === ここから下はフロントエンドだけが持つ UI 状態（サーバーには送らない）。手書きで管理する ===
 
 // --- 表示スタイル（すべてクライアント側のみで完結し、変更は即座に反映される） ---

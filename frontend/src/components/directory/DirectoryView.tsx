@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import DirectoryComparePanel from './DirectoryComparePanel'
 import DirectoryOpen from './DirectoryOpen'
+import NewRunPanel from './NewRunPanel'
 import DirectorySectionPanel from './DirectorySectionPanel'
 import DirectoryTimeseriesPanel from './DirectoryTimeseriesPanel'
 import ErrorBanner from '../common/ErrorBanner'
@@ -8,7 +9,7 @@ import { runLabel } from './compareFigure'
 import { openDirectory } from '../../api/client'
 import type { DirectoryMeta } from '../../types'
 
-type SubTab = 'section' | 'timeseries' | 'compare'
+type SubTab = 'section' | 'timeseries' | 'compare' | 'new-run'
 
 export default function DirectoryView() {
   // 開いたランはすべて覚えておく（比較タブで A・B を選ぶため）。表示中のランは currentId
@@ -100,6 +101,15 @@ export default function DirectoryView() {
               />
               比較
             </label>
+            <label className={`segmented__option ${subTab === 'new-run' ? 'is-active' : ''}`}>
+              <input
+                type="radio"
+                name="directory-subtab"
+                checked={subTab === 'new-run'}
+                onChange={() => setSubTab('new-run')}
+              />
+              新しいラン
+            </label>
           </div>
 
           {/* 各タブの状態はパネル自身が持つ。key を dir_id にして、別のディレクトリを開いたら初期状態から始める。
@@ -119,6 +129,8 @@ export default function DirectoryView() {
               <DirectoryComparePanel runs={runs} />
             )}
           </div>
+          {/* 開いたときだけ runner に問い合わせる（runner を起動していなくても他のタブは使える） */}
+          {subTab === 'new-run' && <NewRunPanel key={meta.dir_id} meta={meta} />}
         </>
       )}
     </div>

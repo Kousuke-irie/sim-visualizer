@@ -9,11 +9,14 @@ const BACKEND_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../../back
 
 // backend/app/tests/sample_data.py で、実データと同じ形式の合成計算結果ディレクトリを作る。
 // 格子 I=4, J=5, K=3、フレーム 3 枚（ifit2=3600s）、hist は TEMP/DOX × 地点 01/02。
-export function createSimulationDir(options: { tempOffset?: number; ni?: number; name?: string } = {}): string {
+export function createSimulationDir(
+  options: { tempOffset?: number; ni?: number; name?: string; modelFiles?: boolean } = {},
+): string {
   const root = join(mkdtempSync(join(E2E_DATA_ROOT, 'case-')), options.name ?? 'sim')
   const args = ['-m', 'app.tests.sample_data', root]
   if (options.tempOffset !== undefined) args.push('--temp-offset', String(options.tempOffset))
   if (options.ni !== undefined) args.push('--ni', String(options.ni))
+  if (options.modelFiles) args.push('--model-files')
   execFileSync(process.env.PYTHON ?? 'python', args, { cwd: BACKEND_DIR })
   return root
 }

@@ -805,3 +805,88 @@ input[type='text']:focus {
 .compare-view-switch {
   align-self: flex-end;
 }
+
+/* ディレクトリモードの「新しいラン」タブ */
+.new-run__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.new-run__section h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.new-run__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.new-run__wide {
+  flex: 1 1 420px;
+}
+
+.new-run__note {
+  margin: 0;
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.85rem;
+}
+
+.new-run__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.new-run__table th,
+.new-run__table td {
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.new-run__table tr.is-changed td {
+  background: #fff7e6;
+}
+
+.new-run__tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.new-run__table input {
+  font-family: ui-monospace, Menlo, monospace;
+  padding: 0.2rem 0.35rem;
+}
+
+.new-run__table input.is-invalid {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.new-run__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.new-run__actions span {
+  margin-right: auto;
+}
+
+.new-run__preview,
+.new-run__created {
+  font-size: 0.9rem;
+}
+
+.new-run__created {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
