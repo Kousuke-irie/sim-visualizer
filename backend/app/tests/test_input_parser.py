@@ -1,6 +1,7 @@
 import pytest
 
-from app.parsers.input_parser import InputParseError, parse_input_dat
+from app.parsers.input_parser import InputParseError, parse_input_dat, source_reads_fkm_in
+from app.tests.sample_data import make_input_dat_text, make_mecnest_source
 
 BASE_LINES = [
     "1 5 0 1 1 0             #isw",
@@ -105,3 +106,38 @@ def test_parse_input_dat_non_numeric_value_raises_parse_error(original, broken):
     assert original in text
     with pytest.raises(InputParseError, match="数値変換"):
         parse_input_dat(text.replace(original, broken))
+
+
+# --- ソースの版による input.dat の行構成の違い（fkm_in,fkc_in 行の有無） ---
+
+
+def test_old_layout_without_fkm_in_line_parses_when_told():
+    text = make_input_dat_text(with_fkm_in=False)
+    parsed = parse_input_dat(text, with_fkm_in=False)
+    assert parsed.result_dirs == {"hist": "hist", "field1": "field1", "field2": "field2"}
+    assert [(p.i, p.j) for p in parsed.points] == [(2, 3), (3, 4)]
+    assert parsed.with_fkm_in is False
+
+
+def test_reading_old_layout_as_new_layout_fails():
+    # 1行ずれて読むと途中で辻褄が合わなくなる（以前は v2 がこれで開けなかった）
+    with pytest.raises(InputParseError):
+        parse_input_dat(make_input_dat_text(with_fkm_in=False), with_fkm_in=True)
+
+
+def test_default_layout_is_the_current_one():
+    assert parse_input_dat(make_input_dat_text()).with_fkm_in is True
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        (make_mecnest_source(with_fkm_in=True), True),
+        (make_mecnest_source(with_fkm_in=False), False),
+        ("      READ (10, *) FKM_IN, FKC_IN\n", True),  # 大文字・空白の違い
+        ("!     read(10,*) fkm_in,fkc_in\n", False),  # コメントアウトされた行は読まれない
+        ("      read(11,*) fkm_in,fkc_in\n", False),  # input.dat（装置番号10）以外からの読み込み
+    ],
+)
+def test_detect_layout_from_source(source, expected):
+    assert source_reads_fkm_in(source) is expected

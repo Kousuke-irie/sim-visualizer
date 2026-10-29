@@ -5,8 +5,13 @@ list-directed read の仕様（1回の read は必ず新しい行から読み始
 余分なトークンは破棄される）により、コメント（`#`以降）除去・空行除去後の
 非コメント行を「1行 = 1回の read」として順に消費するだけで正確に再現できる
 （実データ・実ソースで検証済み。単一グリッド `nest=1` 前提）。
+
+ソースの版によって read 文の数が違う。v5 以降の mecnest.f90 は `fkmmin,fkcmin` の次に
+`read(10,*) fkm_in,fkc_in` を読むが、v2 などの古い版には無い（DESIGN_research_features.md §2）。
+どちらの版として読むかは with_fkm_in で受け取り、判定は source_reads_fkm_in でソースから行う。
 """
 
+import re
 from dataclasses import dataclass
 
 
@@ -33,6 +38,7 @@ class ParsedInput:
     histout: float
     points: list[HistPointRaw]
     result_dirs: dict[str, str]  # {"hist": ..., "field1": ..., "field2": ...}
+    with_fkm_in: bool = True  # fkm_in,fkc_in 行がある版として読んだか
 
 
 class _LineCursor:
@@ -70,7 +76,16 @@ def _first_float(tokens: list[str], label: str) -> float:
         raise InputParseError(f"{label}の数値変換に失敗しました: {tokens[0]!r}") from e
 
 
-def parse_input_dat(text: str) -> ParsedInput:
+# 装置番号10（input.dat）から fkm_in を読む read 文。行頭が ! のコメント行は除く
+_FKM_IN_READ_RE = re.compile(r"^[^!\n]*\bread\s*\(\s*10\s*,\s*\*\s*\)\s*fkm_in\b", re.IGNORECASE | re.MULTILINE)
+
+
+def source_reads_fkm_in(mecnest_source: str) -> bool:
+    """mecnest.f90 が input.dat から fkm_in,fkc_in 行を読む版かどうか。"""
+    return _FKM_IN_READ_RE.search(mecnest_source) is not None
+
+
+def parse_input_dat(text: str, with_fkm_in: bool = True) -> ParsedInput:
     cur = _LineCursor(_strip_comments_and_blanks(text))
 
     cur.take_tokens()  # 1: isw(1..6)
@@ -113,7 +128,8 @@ def parse_input_dat(text: str) -> ParsedInput:
 
     cur.take_tokens()  # 11: am0,ac0,fkm0,fkc0,alat
     cur.take_tokens()  # 12: fkmmin,fkcmin
-    cur.take_tokens()  # 13: fkm_in,fkc_in
+    if with_fkm_in:
+        cur.take_tokens()  # 13: fkm_in,fkc_in（v5 以降の版のみ）
     cur.take_tokens()  # 14: jsw(1,n)
     cur.take_tokens()  # 15: jsw(2,n)
     cur.take_tokens()  # 16: nopen
@@ -177,4 +193,5 @@ def parse_input_dat(text: str) -> ParsedInput:
         histout=histout,
         points=points,
         result_dirs={"hist": hist_dir, "field1": field1_dir, "field2": field2_dir},
+        with_fkm_in=with_fkm_in,
     )
