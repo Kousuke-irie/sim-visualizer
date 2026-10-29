@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import ControlGroup from '../common/ControlGroup'
 import { GridIcon, ImageIcon, LayersIcon } from '../common/icons'
 import RangeField from '../common/RangeField'
@@ -11,6 +12,8 @@ type Props = {
 }
 
 export default function TimeseriesControls({ meta, params, onChange }: Props) {
+  // 同じ部品が画面に複数マウントされるので、ラジオボタンのグループ名を部品ごとに分ける（共通だと選択が互いに外れる）
+  const groupId = useId()
   function toggleDepth(depth: string, checked: boolean) {
     const next = checked ? [...params.selectedDepths, depth] : params.selectedDepths.filter((d) => d !== depth)
     onChange({ selectedDepths: meta.depths.filter((d) => next.includes(d)) })
@@ -47,7 +50,7 @@ export default function TimeseriesControls({ meta, params, onChange }: Props) {
             <label key={unit} className={`segmented__option ${params.timeUnit === unit ? 'is-active' : ''}`}>
               <input
                 type="radio"
-                name="time-unit"
+                name={`${groupId}-time-unit`}
                 checked={params.timeUnit === unit}
                 onChange={() => onChange({ timeUnit: unit })}
               />

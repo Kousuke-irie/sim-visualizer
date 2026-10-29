@@ -15,6 +15,197 @@
         "title": "Body_upload_file_api_upload_post",
         "type": "object"
       },
+      "CompareCheckRequest": {
+        "properties": {
+          "dir_a": {
+            "title": "Dir A",
+            "type": "string"
+          },
+          "dir_b": {
+            "title": "Dir B",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dir_a",
+          "dir_b"
+        ],
+        "title": "CompareCheckRequest",
+        "type": "object"
+      },
+      "CompareCheckResponse": {
+        "properties": {
+          "common_params": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Common Params",
+            "type": "array"
+          },
+          "common_points": {
+            "items": {
+              "$ref": "#/components/schemas/ComparePoint"
+            },
+            "title": "Common Points",
+            "type": "array"
+          },
+          "common_times": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Common Times",
+            "type": "array"
+          },
+          "common_variables": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Common Variables",
+            "type": "array"
+          }
+        },
+        "required": [
+          "common_variables",
+          "common_times",
+          "common_params",
+          "common_points"
+        ],
+        "title": "CompareCheckResponse",
+        "type": "object"
+      },
+      "ComparePoint": {
+        "description": "A・B で同じ格子位置 (i, j) にある hist 地点の組。地点番号が同じでも位置が違えば組にしない。",
+        "properties": {
+          "i": {
+            "title": "I",
+            "type": "integer"
+          },
+          "j": {
+            "title": "J",
+            "type": "integer"
+          },
+          "point_a": {
+            "title": "Point A",
+            "type": "string"
+          },
+          "point_b": {
+            "title": "Point B",
+            "type": "string"
+          }
+        },
+        "required": [
+          "point_a",
+          "point_b",
+          "i",
+          "j"
+        ],
+        "title": "ComparePoint",
+        "type": "object"
+      },
+      "CompareSectionRequest": {
+        "properties": {
+          "dir_a": {
+            "title": "Dir A",
+            "type": "string"
+          },
+          "dir_b": {
+            "title": "Dir B",
+            "type": "string"
+          },
+          "include_vectors": {
+            "default": true,
+            "title": "Include Vectors",
+            "type": "boolean"
+          },
+          "plane": {
+            "enum": [
+              "XY",
+              "XZ",
+              "YZ"
+            ],
+            "title": "Plane",
+            "type": "string"
+          },
+          "slice_index": {
+            "title": "Slice Index",
+            "type": "integer"
+          },
+          "time_sec": {
+            "title": "Time Sec",
+            "type": "number"
+          },
+          "variable": {
+            "title": "Variable",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dir_a",
+          "dir_b",
+          "time_sec",
+          "plane",
+          "slice_index",
+          "variable"
+        ],
+        "title": "CompareSectionRequest",
+        "type": "object"
+      },
+      "CompareSectionResponse": {
+        "properties": {
+          "a": {
+            "$ref": "#/components/schemas/DirectorySectionDataResponse"
+          },
+          "b": {
+            "$ref": "#/components/schemas/DirectorySectionDataResponse"
+          },
+          "diff": {
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "title": "Diff",
+            "type": "array"
+          },
+          "diff_range": {
+            "anyOf": [
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Diff Range"
+          }
+        },
+        "required": [
+          "a",
+          "b",
+          "diff",
+          "diff_range"
+        ],
+        "title": "CompareSectionResponse",
+        "type": "object"
+      },
       "Coords": {
         "properties": {
           "X": {
@@ -1075,6 +1266,88 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/compare/check": {
+      "post": {
+        "operationId": "check_api_compare_check_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompareCheckResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Check",
+        "tags": [
+          "compare"
+        ]
+      }
+    },
+    "/api/compare/section": {
+      "post": {
+        "operationId": "section_api_compare_section_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareSectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompareSectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Section",
+        "tags": [
+          "compare"
+        ]
+      }
+    },
     "/api/directory/browse": {
       "get": {
         "operationId": "browse_directory_api_directory_browse_get",

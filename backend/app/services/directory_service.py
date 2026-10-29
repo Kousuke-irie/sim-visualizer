@@ -12,11 +12,11 @@ from app.models.directory import (
     DirectoryTimeseriesResponse,
 )
 from app.parsers.dat_parser import DatParseError, parse_dat_bytes
-from app.parsers.dir_scanner import scan_hist_files, scan_plt_frames
+from app.parsers.dir_scanner import PltFrameRaw, scan_hist_files, scan_plt_frames
 from app.parsers.input_parser import InputParseError, ParsedInput, parse_input_dat, source_reads_fkm_in
-from app.parsers.plt_parser import PltParseError, parse_plt_bytes
+from app.parsers.plt_parser import ParsedPlt, PltParseError, parse_plt_bytes
 from app.services.directory_browse import require_within_data_roots
-from app.services.directory_store import directory_store
+from app.services.directory_store import DirectoryEntry, directory_store
 from app.services.path_policy import PathNotAllowedError, resolve_within_data_roots
 from app.services.plt_cache import plt_cache
 from app.services.section_data import extract_section_data
@@ -118,19 +118,24 @@ def open_directory(root: str) -> DirectoryMeta:
     return meta
 
 
-def get_section_data(req: DirectorySectionDataRequest) -> DirectorySectionDataResponse:
-    entry = directory_store.get(req.dir_id)
+def load_frame(dir_id: str, frame_index: int) -> tuple[DirectoryEntry, PltFrameRaw, ParsedPlt]:
+    """開いたディレクトリの指定フレームを（LRU キャッシュ経由で）読む。断面取得と比較で共通に使う。"""
+    entry = directory_store.get(dir_id)
 
-    frame_meta = next((f for f in entry.plt_frames if f.index == req.frame_index), None)
+    frame_meta = next((f for f in entry.plt_frames if f.index == frame_index), None)
     if frame_meta is None:
-        raise InvalidInputError(f"指定されたframe_indexのフレームが見つかりません: {req.frame_index}")
+        raise InvalidInputError(f"指定されたframe_indexのフレームが見つかりません: {frame_index}")
 
     frame_path = os.path.join(entry.field2_dir, frame_meta.file)
     try:
-        parsed_frame = plt_cache.get_or_parse(req.dir_id, req.frame_index, frame_path)
+        parsed_frame = plt_cache.get_or_parse(dir_id, frame_index, frame_path)
     except PltParseError as e:
         raise InvalidInputError(f"pltファイルの解析に失敗しました: {e}") from e
+    return entry, frame_meta, parsed_frame
 
+
+def get_section_data(req: DirectorySectionDataRequest) -> DirectorySectionDataResponse:
+    _entry, frame_meta, parsed_frame = load_frame(req.dir_id, req.frame_index)
     section_data = extract_section_data(parsed_frame, req)
     return DirectorySectionDataResponse(
         **section_data.model_dump(),

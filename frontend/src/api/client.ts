@@ -1,4 +1,8 @@
 import type {
+  CompareCheckRequest,
+  CompareCheckResponse,
+  CompareSectionRequest,
+  CompareSectionResponse,
   DatMeta,
   DirectoryBrowseResponse,
   DirectoryMeta,
@@ -115,4 +119,12 @@ export function fetchDirectorySectionData(req: DirectorySectionDataRequest): Pro
 
 export function fetchDirectoryTimeseriesData(req: DirectoryTimeseriesRequest): Promise<DirectoryTimeseriesResponse> {
   return postJson('/directory/timeseries/data', req)
+}
+
+export function compareCheck(req: CompareCheckRequest): Promise<CompareCheckResponse> {
+  return postJson('/compare/check', req, '比較できるか確認できませんでした')
+}
+
+export function fetchCompareSection(req: CompareSectionRequest): Promise<CompareSectionResponse> {
+  return postJson('/compare/section', req)
 }

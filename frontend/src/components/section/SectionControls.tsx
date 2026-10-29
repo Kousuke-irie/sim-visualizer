@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import ControlGroup from '../common/ControlGroup'
 import { AspectIcon, CompassIcon, GridIcon, ImageIcon, LayersIcon, PaletteIcon, WindIcon } from '../common/icons'
 import ColorSwatchPicker from '../common/ColorSwatchPicker'
@@ -20,13 +21,20 @@ type Props = {
 const PLANES: Plane[] = ['XY', 'XZ', 'YZ']
 
 export default function SectionControls({ meta, params, axisSize, axisCoordLabel, onPlaneChange, onChange }: Props) {
+  // 同じ部品が画面に複数マウントされるので、ラジオボタンのグループ名を部品ごとに分ける（共通だと選択が互いに外れる）
+  const groupId = useId()
   return (
     <div className="section-controls">
       <ControlGroup icon={<CompassIcon className="control-group__icon" />} title="断面方向">
         <div className="segmented" role="radiogroup" aria-label="断面方向">
           {PLANES.map((p) => (
             <label key={p} className={`segmented__option ${params.plane === p ? 'is-active' : ''}`}>
-              <input type="radio" name="plane" checked={params.plane === p} onChange={() => onPlaneChange(p)} />
+              <input
+                type="radio"
+                name={`${groupId}-plane`}
+                checked={params.plane === p}
+                onChange={() => onPlaneChange(p)}
+              />
               {p}
             </label>
           ))}
@@ -78,7 +86,7 @@ export default function SectionControls({ meta, params, axisSize, axisCoordLabel
           <label className={`segmented__option ${!params.customColormap.enabled ? 'is-active' : ''}`}>
             <input
               type="radio"
-              name="colormap-mode"
+              name={`${groupId}-colormap-mode`}
               checked={!params.customColormap.enabled}
               onChange={() => onChange({ customColormap: { ...params.customColormap, enabled: false } })}
             />
@@ -87,7 +95,7 @@ export default function SectionControls({ meta, params, axisSize, axisCoordLabel
           <label className={`segmented__option ${params.customColormap.enabled ? 'is-active' : ''}`}>
             <input
               type="radio"
-              name="colormap-mode"
+              name={`${groupId}-colormap-mode`}
               checked={params.customColormap.enabled}
               onChange={() => onChange({ customColormap: { ...params.customColormap, enabled: true } })}
             />

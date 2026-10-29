@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { PauseIcon, PlayIcon } from '../common/icons'
 import type { PltFrameMeta, TimeUnit } from '../../types'
 import { formatTime } from '../../utils/time'
@@ -14,6 +14,8 @@ type Props = {
 const PLAYBACK_INTERVAL_MS = 400
 
 export default function TimeSlider({ frames, position, onPositionChange, timeUnit, onTimeUnitChange }: Props) {
+  // 同じ部品が画面に複数マウントされるので、ラジオボタンのグループ名を部品ごとに分ける（共通だと選択が互いに外れる）
+  const groupId = useId()
   const [playing, setPlaying] = useState(false)
   const positionRef = useRef(position)
   positionRef.current = position
@@ -67,7 +69,7 @@ export default function TimeSlider({ frames, position, onPositionChange, timeUni
           <label key={unit} className={`segmented__option ${timeUnit === unit ? 'is-active' : ''}`}>
             <input
               type="radio"
-              name="time-slider-unit"
+              name={`${groupId}-time-slider-unit`}
               checked={timeUnit === unit}
               onChange={() => onTimeUnitChange(unit)}
             />

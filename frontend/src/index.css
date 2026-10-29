@@ -775,3 +775,9 @@ input[type='text']:focus {
     max-height: none;
   }
 }
+
+/* ディレクトリモードで複数のランを開いたときの「表示中のラン」選択（全幅に広げない） */
+.run-select {
+  max-width: 420px;
+  margin-bottom: 0.75rem;
+}
