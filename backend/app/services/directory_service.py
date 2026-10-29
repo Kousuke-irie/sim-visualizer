@@ -13,7 +13,7 @@ from app.models.directory import (
 )
 from app.parsers.dat_parser import DatParseError, parse_dat_bytes
 from app.parsers.dir_scanner import scan_hist_files, scan_plt_frames
-from app.parsers.input_parser import InputParseError, parse_input_dat
+from app.parsers.input_parser import InputParseError, ParsedInput, parse_input_dat, source_reads_fkm_in
 from app.parsers.plt_parser import PltParseError, parse_plt_bytes
 from app.services.directory_browse import require_within_data_roots
 from app.services.directory_store import directory_store
@@ -36,6 +36,55 @@ def _result_dir(root: str, name: str, label: str) -> str:
     return path
 
 
+def _output_dirs_exist(root: str, parsed: ParsedInput) -> bool:
+    for key in ("field2", "hist"):
+        path = os.path.join(root, parsed.result_dirs[key])
+        try:
+            resolve_within_data_roots(path)
+        except PathNotAllowedError:
+            return False
+        if not os.path.isdir(path):
+            return False
+    return True
+
+
+def _parse_input_for_dir(root: str, text: str) -> ParsedInput:
+    """input.dat を、そのディレクトリのソースの版に合った行構成で読む（DESIGN_research_features.md §2）。
+
+    v5 以降の mecnest.f90 は fkm_in,fkc_in 行を読むが、古い版は読まない。ソースがあればそれを正とする。
+    ソースが無ければ両方の行構成で読み、出力ディレクトリ（field2 / hist）が実在する方を採る。
+    1行ずれて読めてしまった方を黙って使わないよう、出力ディレクトリの実在で裏を取る。
+    """
+    source_path = os.path.join(root, "mecnest.f90")
+    if os.path.isfile(source_path):
+        with open(source_path, encoding="utf-8", errors="replace") as f:
+            with_fkm_in = source_reads_fkm_in(f.read())
+        try:
+            return parse_input_dat(text, with_fkm_in=with_fkm_in)
+        except InputParseError as e:
+            version = "読む" if with_fkm_in else "読まない"
+            raise InvalidInputError(
+                f"input.dat の解析に失敗しました（mecnest.f90 は fkm_in,fkc_in 行を{version}版です）: {e}"
+            ) from e
+
+    parsed: dict[bool, ParsedInput] = {}
+    errors: dict[bool, InputParseError] = {}
+    for with_fkm_in in (True, False):
+        try:
+            parsed[with_fkm_in] = parse_input_dat(text, with_fkm_in=with_fkm_in)
+        except InputParseError as e:
+            errors[with_fkm_in] = e
+
+    for with_fkm_in in (True, False):
+        if with_fkm_in in parsed and _output_dirs_exist(root, parsed[with_fkm_in]):
+            return parsed[with_fkm_in]
+    for with_fkm_in in (True, False):
+        if with_fkm_in in parsed:
+            return parsed[with_fkm_in]  # 出力ディレクトリが無いことは呼び出し側が明示的にエラーにする
+    # どちらでも読めないときは、現行の版として読んだときのエラーを伝える（以前と同じ文言）
+    raise InvalidInputError(f"input.dat の解析に失敗しました: {errors[True]}") from errors[True]
+
+
 def open_directory(root: str) -> DirectoryMeta:
     require_within_data_roots(root)
     if not os.path.isdir(root):
@@ -45,11 +94,8 @@ def open_directory(root: str) -> DirectoryMeta:
     if not os.path.isfile(input_path):
         raise InvalidInputError("input.dat が見つかりません")
 
-    try:
-        with open(input_path, encoding="utf-8", errors="replace") as f:
-            parsed_input = parse_input_dat(f.read())
-    except InputParseError as e:
-        raise InvalidInputError(f"input.dat の解析に失敗しました: {e}") from e
+    with open(input_path, encoding="utf-8", errors="replace") as f:
+        parsed_input = _parse_input_for_dir(root, f.read())
 
     field2_dir = _result_dir(root, parsed_input.result_dirs["field2"], "field2")
     hist_dir = _result_dir(root, parsed_input.result_dirs["hist"], "hist")

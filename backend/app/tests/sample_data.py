@@ -109,10 +109,13 @@ def make_input_dat_text(
     ifit2: float = 3600.0,
     points: list[tuple[int, int, int]] | None = None,
     milb_mjlb: str = "0 0 #miflib",
+    with_fkm_in: bool = True,
 ) -> str:
+    """with_fkm_in=False で、fkm_in,fkc_in 行を持たない古い版（v2 など）の行構成にする。"""
     points = points if points is not None else [(2, 3, 1), (3, 4, 1)]
+    lines = [line for line in INPUT_TEMPLATE_LINES if with_fkm_in or "#fkm_in" not in line]
     return (
-        "\n".join(INPUT_TEMPLATE_LINES).format(
+        "\n".join(lines).format(
             dims=f"{ni} {nj} {nk} {nest} #in,jn,kn,nest",
             fifit2=f"{ifit2}  0.   999999999999. #fifit2,5,6",
             dx=DX,
@@ -125,10 +128,37 @@ def make_input_dat_text(
     )
 
 
-def write_simulation_dir(root: Path, n_frames: int = 3, ni: int = 4, nj: int = 5, nk: int = 3) -> Path:
-    """input.dat / field2 / hist を持つ計算結果ディレクトリを root に作る。"""
+def make_mecnest_source(with_fkm_in: bool) -> str:
+    """mecnest.f90 の input.dat 読み込み部分だけを模した最小のソース（版の判定に使う部分）。"""
+    lines = [
+        "      open(10,file='input.dat')",
+        "      read(10,*) (isw(i),i=1,6)",
+        "      read(10,*) am0,ac0,fkm0,fkc0,alat",
+        "      read(10,*) fkmmin,fkcmin",
+    ]
+    if with_fkm_in:
+        lines.append("      read(10,*) fkm_in,fkc_in                ! isw(2)=5用: モバ内部の拡散係数")
+    lines.append("      read(10,*) (jsw(1,n),n=1,nast)")
+    return "\n".join(lines) + "\n"
+
+
+def write_simulation_dir(
+    root: Path,
+    n_frames: int = 3,
+    ni: int = 4,
+    nj: int = 5,
+    nk: int = 3,
+    with_fkm_in: bool = True,
+    with_source: bool = False,
+) -> Path:
+    """input.dat / field2 / hist を持つ計算結果ディレクトリを root に作る。
+
+    with_fkm_in で input.dat の版（fkm_in,fkc_in 行の有無）を、with_source で mecnest.f90 を置くかを選ぶ。
+    """
     root.mkdir(parents=True, exist_ok=True)
-    (root / "input.dat").write_text(make_input_dat_text(ni, nj, nk))
+    (root / "input.dat").write_text(make_input_dat_text(ni, nj, nk, with_fkm_in=with_fkm_in))
+    if with_source:
+        (root / "mecnest.f90").write_text(make_mecnest_source(with_fkm_in))
     field2 = root / "field2"
     hist = root / "hist"
     field2.mkdir(exist_ok=True)
