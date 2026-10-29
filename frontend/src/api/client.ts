@@ -7,6 +7,10 @@ import type {
   CompareTimeseriesResponse,
   CreateRunRequest,
   CreatedRun,
+  Job,
+  JobList,
+  JobLog,
+  SubmitJobRequest,
   RunPreview,
   RunTemplate,
   RunTemplateRequest,
@@ -151,4 +155,21 @@ export function previewRun(req: CreateRunRequest): Promise<RunPreview> {
 
 export function createRun(req: CreateRunRequest): Promise<CreatedRun> {
   return postJson('/runs', req, '新しいランを作れませんでした')
+}
+
+// 計算の待ち行列（1本ずつ順に、コンパイル → 実行）。状態は runner がファイルに保存している
+export function listJobs(): Promise<JobList> {
+  return getJson('/runs/jobs', '計算の一覧を取得できませんでした')
+}
+
+export function submitJob(path: string): Promise<Job> {
+  return postJson('/runs/jobs', { path } satisfies SubmitJobRequest, '計算を待ち行列に入れられませんでした')
+}
+
+export function cancelJob(jobId: string): Promise<Job> {
+  return postJson(`/runs/jobs/${encodeURIComponent(jobId)}/cancel`, {}, '中止できませんでした')
+}
+
+export function fetchJobLog(jobId: string, lines = 200): Promise<JobLog> {
+  return getJson(`/runs/jobs/${encodeURIComponent(jobId)}/log?lines=${lines}`, 'ログを取得できませんでした')
 }

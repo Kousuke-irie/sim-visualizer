@@ -1145,6 +1145,167 @@
         "title": "InputLineModel",
         "type": "object"
       },
+      "Job": {
+        "properties": {
+          "base_run": {
+            "title": "Base Run",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "elapsed_sec": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Elapsed Sec"
+          },
+          "eta_sec": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eta Sec"
+          },
+          "exit_code": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exit Code"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "frames_done": {
+            "title": "Frames Done",
+            "type": "integer"
+          },
+          "frames_expected": {
+            "title": "Frames Expected",
+            "type": "integer"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "run_dir": {
+            "title": "Run Dir",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "compiling",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled",
+              "interrupted"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "name",
+          "run_dir",
+          "base_run",
+          "status",
+          "message",
+          "created_at",
+          "started_at",
+          "finished_at",
+          "exit_code",
+          "frames_done",
+          "frames_expected",
+          "elapsed_sec",
+          "eta_sec"
+        ],
+        "title": "Job",
+        "type": "object"
+      },
+      "JobList": {
+        "properties": {
+          "jobs": {
+            "items": {
+              "$ref": "#/components/schemas/Job"
+            },
+            "title": "Jobs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "jobs"
+        ],
+        "title": "JobList",
+        "type": "object"
+      },
+      "JobLog": {
+        "properties": {
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "job_id",
+          "text",
+          "truncated"
+        ],
+        "title": "JobLog",
+        "type": "object"
+      },
       "PltFrameMeta": {
         "properties": {
           "file": {
@@ -1579,6 +1740,19 @@
           "value_range"
         ],
         "title": "SectionDataResponse",
+        "type": "object"
+      },
+      "SubmitJobRequest": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "SubmitJobRequest",
         "type": "object"
       },
       "TimeseriesDataResponse": {
@@ -2168,6 +2342,162 @@
           }
         },
         "summary": "Create",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/api/runs/jobs": {
+      "get": {
+        "operationId": "list_jobs_api_runs_jobs_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Jobs",
+        "tags": [
+          "runs"
+        ]
+      },
+      "post": {
+        "operationId": "submit_job_api_runs_jobs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Job",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/api/runs/jobs/{job_id}/cancel": {
+      "post": {
+        "operationId": "cancel_job_api_runs_jobs__job_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Job",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/api/runs/jobs/{job_id}/log": {
+      "get": {
+        "operationId": "job_log_api_runs_jobs__job_id__log_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lines",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Lines",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobLog"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Job Log",
         "tags": [
           "runs"
         ]

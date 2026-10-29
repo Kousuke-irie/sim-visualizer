@@ -208,6 +208,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/runs/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Jobs */
+        get: operations["list_jobs_api_runs_jobs_get"];
+        put?: never;
+        /** Submit Job */
+        post: operations["submit_job_api_runs_jobs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/jobs/{job_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Job */
+        post: operations["cancel_job_api_runs_jobs__job_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/jobs/{job_id}/log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Job Log */
+        get: operations["job_log_api_runs_jobs__job_id__log_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/runs/preview": {
         parameters: {
             query?: never;
@@ -684,6 +736,54 @@ export interface components {
             /** Tokens */
             tokens: string[];
         };
+        /** Job */
+        Job: {
+            /** Base Run */
+            base_run: string;
+            /** Created At */
+            created_at: string;
+            /** Elapsed Sec */
+            elapsed_sec: number | null;
+            /** Eta Sec */
+            eta_sec: number | null;
+            /** Exit Code */
+            exit_code: number | null;
+            /** Finished At */
+            finished_at: string | null;
+            /** Frames Done */
+            frames_done: number;
+            /** Frames Expected */
+            frames_expected: number;
+            /** Job Id */
+            job_id: string;
+            /** Message */
+            message: string;
+            /** Name */
+            name: string;
+            /** Run Dir */
+            run_dir: string;
+            /** Started At */
+            started_at: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "queued" | "compiling" | "running" | "succeeded" | "failed" | "cancelled" | "interrupted";
+        };
+        /** JobList */
+        JobList: {
+            /** Jobs */
+            jobs: components["schemas"]["Job"][];
+        };
+        /** JobLog */
+        JobLog: {
+            /** Job Id */
+            job_id: string;
+            /** Text */
+            text: string;
+            /** Truncated */
+            truncated: boolean;
+        };
         /** PltFrameMeta */
         PltFrameMeta: {
             /** File */
@@ -822,6 +922,11 @@ export interface components {
             vector_v: (number | null)[][] | null;
             /** Vector V Label */
             vector_v_label: string | null;
+        };
+        /** SubmitJobRequest */
+        SubmitJobRequest: {
+            /** Path */
+            path: string;
         };
         /** TimeseriesDataResponse */
         TimeseriesDataResponse: {
@@ -1219,6 +1324,123 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CreatedRun"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_jobs_api_runs_jobs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobList"];
+                };
+            };
+        };
+    };
+    submit_job_api_runs_jobs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitJobRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_job_api_runs_jobs__job_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    job_log_api_runs_jobs__job_id__log_get: {
+        parameters: {
+            query?: {
+                lines?: number;
+            };
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobLog"];
                 };
             };
             /** @description Validation Error */

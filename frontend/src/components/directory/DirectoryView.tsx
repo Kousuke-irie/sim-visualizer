@@ -20,20 +20,37 @@ export default function DirectoryView() {
   const [openError, setOpenError] = useState<string | null>(null)
   const [subTab, setSubTab] = useState<SubTab>('section')
 
-  async function handleOpen(path: string) {
+  // 「元のランと比較」で選ぶ A・B。変わるたびに比較タブを作り直して、その組で始める
+  const [comparePair, setComparePair] = useState<{ a: string; b: string } | null>(null)
+
+  async function openRuns(paths: string[]): Promise<DirectoryMeta[] | null> {
     setOpening(true)
     setOpenError(null)
     try {
-      const newMeta = await openDirectory(path)
+      const opened: DirectoryMeta[] = []
+      for (const path of paths) opened.push(await openDirectory(path))
       // 同じディレクトリを開き直したら、古いものと置き換える（一覧に重複させない）
-      setRuns((prev) => [...prev.filter((r) => r.root !== newMeta.root), newMeta])
-      setCurrentId(newMeta.dir_id)
-      setSubTab('section')
+      const roots = new Set(opened.map((m) => m.root))
+      setRuns((prev) => [...prev.filter((r) => !roots.has(r.root)), ...opened])
+      setCurrentId(opened[opened.length - 1].dir_id)
+      return opened
     } catch (err) {
       setOpenError(err instanceof Error ? err.message : 'ディレクトリを開けませんでした')
+      return null
     } finally {
       setOpening(false)
     }
+  }
+
+  async function handleOpen(path: string) {
+    if (await openRuns([path])) setSubTab('section')
+  }
+
+  async function handleCompare(basePath: string, newPath: string) {
+    const opened = await openRuns([basePath, newPath])
+    if (!opened) return
+    setComparePair({ a: opened[0].dir_id, b: opened[1].dir_id })
+    setSubTab('compare')
   }
 
   return (
@@ -126,11 +143,18 @@ export default function DirectoryView() {
                 比較するには、もう1つランを開いてください（上の「ディレクトリを開く」から追加できます）
               </div>
             ) : (
-              <DirectoryComparePanel runs={runs} />
+              <DirectoryComparePanel
+                key={comparePair ? `${comparePair.a}:${comparePair.b}` : 'opened-order'}
+                runs={runs}
+                initialA={comparePair?.a}
+                initialB={comparePair?.b}
+              />
             )}
           </div>
           {/* 開いたときだけ runner に問い合わせる（runner を起動していなくても他のタブは使える） */}
-          {subTab === 'new-run' && <NewRunPanel key={meta.dir_id} meta={meta} />}
+          {subTab === 'new-run' && (
+            <NewRunPanel key={meta.dir_id} meta={meta} onOpenRun={handleOpen} onCompare={handleCompare} />
+          )}
         </>
       )}
     </div>

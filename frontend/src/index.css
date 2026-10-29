@@ -896,3 +896,86 @@ input[type='text']:focus {
   color: #64748b;
   padding: 0.2rem 0.35rem;
 }
+
+/* 計算の待ち行列 */
+.jobs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.jobs__item {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.jobs__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  font-size: 0.9rem;
+}
+
+.jobs__frames,
+.jobs__time {
+  color: var(--color-text-muted);
+}
+
+.jobs__status--succeeded {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.jobs__status--failed,
+.jobs__status--interrupted {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.jobs__status--cancelled,
+.jobs__status--queued {
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+}
+
+.jobs__progress {
+  width: 100%;
+  height: 0.6rem;
+}
+
+.jobs__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.jobs__actions:empty {
+  display: none;
+}
+
+.jobs__log summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.jobs__log pre {
+  margin: 0.5rem 0 0;
+  max-height: 16rem;
+  overflow: auto;
+  padding: 0.5rem 0.75rem;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}

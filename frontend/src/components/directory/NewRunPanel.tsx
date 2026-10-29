@@ -9,36 +9,53 @@ import {
   isInputLineChanged,
   type NewRunForm,
 } from './newRunForm'
+import RunJobsPanel from './RunJobsPanel'
 import ErrorBanner from '../common/ErrorBanner'
-import { createRun, fetchRunTemplate, previewRun } from '../../api/client'
+import { createRun, fetchRunTemplate, previewRun, submitJob } from '../../api/client'
 import { useLatestRequest } from '../../hooks/useLatestRequest'
 import type { CreatedRun, DirectoryMeta, RunPreview, RunTemplate } from '../../types'
 
-type Props = { meta: DirectoryMeta }
+type Props = {
+  meta: DirectoryMeta
+  onOpenRun: (path: string) => void
+  onCompare: (basePath: string, newPath: string) => void
+}
 
 const LOCKED_HINT =
   '変更できません（出力先・ファイル名は新しいランの外へ書き出さないため、格子寸法・地点はデータやソースと食い違わないため）'
 
-// ディレクトリモードの「新しいラン」タブ。表示中のランを元に、input.dat と eco.h の値を変えた新しいランを作る
-// （DESIGN_research_features.md §4.1）。作成はホストの runner が行い、計算の実行は R5 で追加する
-export default function NewRunPanel({ meta }: Props) {
+// ディレクトリモードの「新しいラン」タブ。表示中のランを元に、input.dat と eco.h の値を変えた新しいランを作り、
+// 待ち行列に入れてホストでコンパイル・実行する（DESIGN_research_features.md §4.1）。処理はホストの runner が行う
+export default function NewRunPanel({ meta, onOpenRun, onCompare }: Props) {
   const request = useMemo(() => ({ dir_id: meta.dir_id }), [meta.dir_id])
   const { data: template, loading, error } = useLatestRequest(request, fetchRunTemplate)
+  const [jobsRefresh, setJobsRefresh] = useState(0)
 
   return (
     <>
+      <RunJobsPanel refreshKey={jobsRefresh} onOpenRun={onOpenRun} onCompare={onCompare} />
       <ErrorBanner message={error} />
       {loading && !template && <div className="plot-placeholder compare-hint">元のランを読み込んでいます…</div>}
-      {template && <NewRunEditor key={template.base_dir} dirId={meta.dir_id} template={template} />}
+      {template && (
+        <NewRunEditor
+          key={template.base_dir}
+          dirId={meta.dir_id}
+          template={template}
+          onSubmitted={() => setJobsRefresh((n) => n + 1)}
+        />
+      )}
     </>
   )
 }
 
-function NewRunEditor({ dirId, template }: { dirId: string; template: RunTemplate }) {
+type EditorProps = { dirId: string; template: RunTemplate; onSubmitted: () => void }
+
+function NewRunEditor({ dirId, template, onSubmitted }: EditorProps) {
   const [form, setForm] = useState<NewRunForm>(() => initialForm(template))
   const [ecoFilter, setEcoFilter] = useState('')
   const [preview, setPreview] = useState<RunPreview | null>(null)
   const [created, setCreated] = useState<CreatedRun | null>(null)
+  const [queued, setQueued] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -49,6 +66,7 @@ function NewRunEditor({ dirId, template }: { dirId: string; template: RunTemplat
     // 値を変えたら前回の確認結果は古くなるので、もう一度確認してもらう
     setPreview(null)
     setCreated(null)
+    setQueued(false)
   }
 
   function setInputToken(lineNo: number, index: number, value: string) {
@@ -69,6 +87,15 @@ function NewRunEditor({ dirId, template }: { dirId: string; template: RunTemplat
     } finally {
       setBusy(false)
     }
+  }
+
+  // 作成と、待ち行列への投入を続けて行う。作成だけ成功して投入に失敗したら、作成済みであることを残してエラーを出す
+  async function createAndRun() {
+    const run = await createRun(request)
+    setCreated(run)
+    await submitJob(run.path)
+    setQueued(true)
+    onSubmitted()
   }
 
   const request = buildCreateRequest(dirId, template, form)
@@ -213,9 +240,9 @@ function NewRunEditor({ dirId, template }: { dirId: string; template: RunTemplat
             className="btn-primary"
             disabled={busy || errors.length > 0 || !preview || !!created}
             title={preview ? undefined : '先に「確認」で内容を確かめてください'}
-            onClick={() => run(() => createRun(request), setCreated)}
+            onClick={() => run(createAndRun, () => {})}
           >
-            作成
+            作成して実行
           </button>
         </div>
 
@@ -254,7 +281,10 @@ function NewRunEditor({ dirId, template }: { dirId: string; template: RunTemplat
           <div className="new-run__created" role="status">
             新しいランを作成しました: <code>{created.path}</code>
             <br />
-            変更の記録は simviz_run.json に残しています。計算の実行（コンパイル・待ち行列）は次の段階で追加します。
+            変更の記録は simviz_run.json に残しています。
+            {queued
+              ? '待ち行列に入れました。進み具合は上の「計算の待ち行列」で見られます。'
+              : !busy && '待ち行列には入っていません（エラーの内容を確認してください）。'}
           </div>
         )}
       </section>

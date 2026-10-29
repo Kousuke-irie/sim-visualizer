@@ -1,3 +1,4 @@
+import { delimiter, join } from 'node:path'
 import { defineConfig, devices } from '@playwright/test'
 import { E2E_DATA_ROOT } from './e2e/dataRoot'
 
@@ -8,6 +9,10 @@ const python = process.env.PYTHON ?? 'python'
 // （手元で 8100 番の runner を動かしていてもぶつからないように）
 const RUNNER_PORT = '8101'
 const RUNNER_TOKEN = 'e2e-runner-token'
+// 計算の実行は、本物の gfortran の代わりに偽の gfortran（backend/app/tests/sample_data.py）で行う。
+// 偽の a.out は合成の tec-*.plt を FAKE_MODEL_FRAME_SECONDS 秒ごとに書き出す。待ち行列もテスト専用のファイルに保存する
+const FAKE_BIN = join(E2E_DATA_ROOT, '.fake-bin')
+const JOBS_FILE = join(E2E_DATA_ROOT, '.jobs.json')
 
 export default defineConfig({
   testDir: './e2e',
@@ -32,11 +37,18 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
     },
     {
-      command: `${python} -m app.runner`,
+      command: `${python} -m app.tests.sample_data ${FAKE_BIN} --fake-toolchain && ${python} -m app.runner`,
       cwd: '../backend',
       // トークン無しの要求には 401 を返すが、Playwright は 401 も「起動済み」とみなす
       url: `http://127.0.0.1:${RUNNER_PORT}/health`,
-      env: { SIMVIZ_RUNNER_TOKEN: RUNNER_TOKEN, SIMVIZ_DATA_ROOTS: E2E_DATA_ROOT, SIMVIZ_RUNNER_PORT: RUNNER_PORT },
+      env: {
+        SIMVIZ_RUNNER_TOKEN: RUNNER_TOKEN,
+        SIMVIZ_DATA_ROOTS: E2E_DATA_ROOT,
+        SIMVIZ_RUNNER_PORT: RUNNER_PORT,
+        SIMVIZ_JOBS_FILE: JOBS_FILE,
+        PATH: `${FAKE_BIN}${delimiter}${process.env.PATH}`,
+        FAKE_MODEL_FRAME_SECONDS: '0.5',
+      },
       reuseExistingServer: !process.env.CI,
     },
     {

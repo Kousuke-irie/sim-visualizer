@@ -30,7 +30,12 @@ import type {
   TimeUnit,
 } from '../../types'
 
-type Props = { runs: DirectoryMeta[] }
+type Props = {
+  runs: DirectoryMeta[]
+  // 「元のランと比較」から開いたときの A・B（dir_id）。無ければ開いた順で決める
+  initialA?: string
+  initialB?: string
+}
 
 type CompareView = 'diff' | 'pair' | 'timeseries'
 
@@ -44,10 +49,10 @@ const VIEWS: { value: CompareView; label: string }[] = [
 const DEFAULT_COLORMAPS: Record<'diff' | 'pair', string> = { diff: 'RdBu_r', pair: 'viridis' }
 
 // ディレクトリモードの「比較」タブ。開いたランから A・B を選び、同じ時刻・同じ断面（または同じ地点）で比べる
-export default function DirectoryComparePanel({ runs }: Props) {
+export default function DirectoryComparePanel({ runs, initialA, initialB }: Props) {
   // 既定は A = 先に開いたラン、B = 後から開いたラン
-  const [aId, setAId] = useState(() => runs[runs.length - 2]?.dir_id ?? '')
-  const [bId, setBId] = useState(() => runs[runs.length - 1]?.dir_id ?? '')
+  const [aId, setAId] = useState(() => initialA ?? runs[runs.length - 2]?.dir_id ?? '')
+  const [bId, setBId] = useState(() => initialB ?? runs[runs.length - 1]?.dir_id ?? '')
   // 同じディレクトリを開き直すと dir_id が変わる。選んでいたランが一覧から消えたら既定に戻す
   const a = runs.find((r) => r.dir_id === aId) ?? runs[runs.length - 2]
   const b = runs.find((r) => r.dir_id === bId) ?? runs[runs.length - 1]
