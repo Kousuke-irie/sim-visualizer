@@ -1,7 +1,7 @@
 // 時系列グラフの Plotly 図形を組み立てる純粋関数群（sectionFigure.ts と同じ方針）。
 // React やネットワークに依存しないため、timeseriesFigure.test.ts で直接検証する。
 import type { Data, Layout } from 'plotly.js'
-import { COLOR_PALETTE } from '../../constants'
+import { LINE_COLORS } from '../../constants'
 import type { DatMeta, TimeseriesDataResponse, TimeseriesParams } from '../../types'
 
 export type TimeseriesFigureMeta = Pick<DatMeta, 'depths' | 'variable'>
@@ -36,7 +36,7 @@ export function buildTimeseriesTraces(
         name: depth,
         x: times,
         y: data.values.map((row) => row[depthIndex]),
-        line: { color: COLOR_PALETTE[depthIndex % COLOR_PALETTE.length] },
+        line: { color: LINE_COLORS[depthIndex % LINE_COLORS.length] },
         hovertemplate: `${depth}<br>time: %{x}<br>${meta.variable}: %{y}<extra></extra>`,
       }))
   )

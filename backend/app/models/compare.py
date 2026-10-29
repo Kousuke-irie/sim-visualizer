@@ -1,7 +1,7 @@
 from typing import Literal
 
 from app.models.base import ApiModel
-from app.models.directory import DirectorySectionDataResponse
+from app.models.directory import DirectorySectionDataResponse, DirectoryTimeseriesResponse
 
 
 class CompareCheckRequest(ApiModel):
@@ -40,3 +40,19 @@ class CompareSectionResponse(ApiModel):
     b: DirectorySectionDataResponse
     diff: list[list[float | None]]  # B − A。どちらかが欠損なら None
     diff_range: tuple[float, float] | None  # 差分の (min, max)。有効な点が無ければ None
+
+
+class CompareTimeseriesRequest(ApiModel):
+    dir_a: str
+    dir_b: str
+    param: str
+    # 地点は番号ではなく格子位置で指定する。A・B で番号の振り方が違っても同じ場所どうしを比べるため
+    i: int
+    j: int
+
+
+class CompareTimeseriesResponse(ApiModel):
+    point_a: str
+    point_b: str
+    a: DirectoryTimeseriesResponse
+    b: DirectoryTimeseriesResponse

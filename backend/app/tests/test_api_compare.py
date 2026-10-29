@@ -104,3 +104,37 @@ def test_same_dims_but_different_coordinates_is_not_comparable(client, data_root
 def test_unknown_dir_is_404(client, runs):
     res = client.post("/api/compare/check", json={"dir_a": runs[0], "dir_b": "nope"})
     assert res.status_code == 404
+
+
+def timeseries(client, a, b, **overrides):
+    body = {"dir_a": a, "dir_b": b, "param": "DOX", "i": 2, "j": 3}
+    return client.post("/api/compare/timeseries", json={**body, **overrides})
+
+
+def test_timeseries_returns_both_runs_for_the_same_location(client, runs):
+    res = timeseries(client, *runs)
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert (body["point_a"], body["point_b"]) == ("01", "01")
+    assert body["a"]["variable"] == body["b"]["variable"] == "DOX"
+    assert len(body["a"]["times"]) == len(body["a"]["values"])
+
+
+def test_timeseries_pairs_points_by_location_not_by_number(client, data_root):
+    # B では同じ場所 (3, 4) が地点 01 になっている
+    a = open_run(client, write_simulation_dir(data_root / "a", points=[(2, 3, 1), (3, 4, 1)]))
+    b = open_run(client, write_simulation_dir(data_root / "b", points=[(3, 4, 1), (1, 1, 1)]))
+    body = timeseries(client, a, b, i=3, j=4).json()
+    assert (body["point_a"], body["point_b"]) == ("02", "01")
+
+
+def test_timeseries_location_missing_in_one_run_is_404(client, data_root):
+    a = open_run(client, write_simulation_dir(data_root / "a", points=[(2, 3, 1), (3, 4, 1)]))
+    b = open_run(client, write_simulation_dir(data_root / "b", points=[(3, 4, 1), (1, 1, 1)]))
+    res = timeseries(client, a, b, i=2, j=3)
+    assert res.status_code == 404
+    assert "B" in res.json()["detail"] and "(2, 3)" in res.json()["detail"]
+
+
+def test_timeseries_param_missing_is_404(client, runs):
+    assert timeseries(client, *runs, param="NOPE").status_code == 404

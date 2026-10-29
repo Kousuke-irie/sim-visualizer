@@ -2,7 +2,14 @@
 
 from fastapi import APIRouter
 
-from app.models.compare import CompareCheckRequest, CompareCheckResponse, CompareSectionRequest, CompareSectionResponse
+from app.models.compare import (
+    CompareCheckRequest,
+    CompareCheckResponse,
+    CompareSectionRequest,
+    CompareSectionResponse,
+    CompareTimeseriesRequest,
+    CompareTimeseriesResponse,
+)
 from app.services import compare_service
 
 router = APIRouter(prefix="/api/compare", tags=["compare"])
@@ -16,3 +23,8 @@ async def check(req: CompareCheckRequest) -> CompareCheckResponse:
 @router.post("/section", response_model=CompareSectionResponse)
 async def section(req: CompareSectionRequest) -> CompareSectionResponse:
     return compare_service.get_section(req)
+
+
+@router.post("/timeseries", response_model=CompareTimeseriesResponse)
+async def timeseries(req: CompareTimeseriesRequest) -> CompareTimeseriesResponse:
+    return compare_service.get_timeseries(req)

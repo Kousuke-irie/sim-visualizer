@@ -12,15 +12,20 @@ type Props = {
   data: TimeseriesDataResponse | null
   loading: boolean
   params: TimeseriesParams
+  // 指定すると、data から作る代わりにこのトレースを描く（比較タブの A・B 重ね描きで使う）
+  traces?: Data[]
 }
 
-export default function TimeseriesPlot({ meta, data, loading, params }: Props) {
+export default function TimeseriesPlot({ meta, data, loading, params, traces }: Props) {
   const chartRef = useRef<PlotlyChartHandle>(null)
 
   const { plotData, layout } = useMemo<{ plotData: Data[]; layout: Partial<Layout> }>(() => {
     if (!data) return { plotData: [], layout: {} }
-    return { plotData: buildTimeseriesTraces(meta, data, params), layout: buildTimeseriesLayout(meta, params) }
-  }, [data, meta, params])
+    return {
+      plotData: traces ?? buildTimeseriesTraces(meta, data, params),
+      layout: buildTimeseriesLayout(meta, params),
+    }
+  }, [data, meta, params, traces])
 
   const config = useMemo(
     () => ({

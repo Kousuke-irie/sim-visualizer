@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/compare/timeseries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Timeseries */
+        post: operations["timeseries_api_compare_timeseries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/directory/browse": {
         parameters: {
             query?: never;
@@ -303,6 +320,28 @@ export interface components {
                 number,
                 number
             ] | null;
+        };
+        /** CompareTimeseriesRequest */
+        CompareTimeseriesRequest: {
+            /** Dir A */
+            dir_a: string;
+            /** Dir B */
+            dir_b: string;
+            /** I */
+            i: number;
+            /** J */
+            j: number;
+            /** Param */
+            param: string;
+        };
+        /** CompareTimeseriesResponse */
+        CompareTimeseriesResponse: {
+            a: components["schemas"]["DirectoryTimeseriesResponse"];
+            b: components["schemas"]["DirectoryTimeseriesResponse"];
+            /** Point A */
+            point_a: string;
+            /** Point B */
+            point_b: string;
         };
         /** Coords */
         Coords: {
@@ -689,6 +728,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CompareSectionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    timeseries_api_compare_timeseries_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompareTimeseriesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompareTimeseriesResponse"];
                 };
             };
             /** @description Validation Error */
